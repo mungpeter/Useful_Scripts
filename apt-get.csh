@@ -7,6 +7,8 @@
 #	v1.1	16.12.02	wallch, basket, spotify
 #	v2.0	16.12.02	separate build-essential and non-essential
 #
+# last updated: 19.12.02
+#
 #	'Essential' and non-essential Ubuntu packages installation
 #	Package subjected to change due to package update/depreciated
 #
