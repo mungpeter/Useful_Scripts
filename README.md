@@ -94,3 +94,36 @@ ssh-rsa FOW9TUQ2J09Jqp4t0u009UGQ0409QJA.... <username>@<localhost>
 > code .
 ```
 - Once VSCode is open in the folder, via the **Source Control** tab (Ctrl+Shift+G), **Stage Change (+)** to single or all files, then **Commit** (Check mark), then in the _lower left corner_ click the _"cloud-looking thing"_ to upload changes made to the files to GitHub. After the first submit, the _"cloud-looking thing"_ will change into a _"cycle-looking thing"_.
+
+#######################################################################################
+# Simple scripts
+- very simple utility scripts, like extracting columns from a file; adding columns together, etc.
+
+#######################################################################################
+# Simple plotting
+- for very simple plotting of data file(s). Plot of a single line of data over time; histrogram (distribution) of a data file; or histogram of several data files as violin plot.
+
+- **Line plot**
+```
+> ./simple_plot.histo.py
+    -f  pi_y207w-h646.txt.bz2   1
+```
+![line]()
+
+- **Histogram of single data**
+```
+> ./simple_plot.histo.py
+    -a .txt
+```
+![histo]()
+
+- **Violin plot (multi-histrogram)**
+```
+> ./simple_plot.violin.py
+    pi_h646.1.txt.bz2   pi_h646.1.txt.bz2   pi_h646.1.txt.bz2
+    -o=pi_h646 
+    -n=pi_a208w-h646,pi_r203w-h646,pi_y207w-h646 
+    -x=pi_interact 
+    -y='distance (A)'
+```
+![violin]()
