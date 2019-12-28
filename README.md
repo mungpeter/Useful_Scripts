@@ -77,7 +77,7 @@ The key's randomart image is:
 > cat ~/.ssh/id_rsa
 ssh-rsa FOW9TUQ2J09Jqp4t0u009UGQ0409QJA.... <username>@<localhost>
 ```
-- In GitHub website, under **User** --> **Settings** --> **SSH and GPG keys**, add via **New SSH key**. Will need to do this for every computer to link to GitHub.
+- In GitHub website, under **User** --> **Settings** --> **SSH and GPG keys**, add the ssh key via **New SSH key**. Will need to do this for every computer to link to GitHub.
 
 > ---
 **Upload files to GitHub**
