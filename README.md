@@ -108,14 +108,14 @@ ssh-rsa FOW9TUQ2J09Jqp4t0u009UGQ0409QJA.... <username>@<localhost>
 > ./simple_plot.histo.py
     -f  pi_y207w-h646.txt.bz2   1
 ```
-![line]()
+![line](https://github.com/mungpeter/Useful_Scripts/blob/master/3_simple_plot/pi_y207w-h646.png)
 
 - **Histogram of single data**
 ```
 > ./simple_plot.histo.py
     -a .txt
 ```
-![histo]()
+![histo](https://github.com/mungpeter/Useful_Scripts/blob/master/3_simple_plot/pi_y207w-h646.histo.png)
 
 - **Violin plot (multi-histrogram)**
 ```
@@ -126,4 +126,4 @@ ssh-rsa FOW9TUQ2J09Jqp4t0u009UGQ0409QJA.... <username>@<localhost>
     -x=pi_interact 
     -y='distance (A)'
 ```
-![violin]()
+![violin](https://github.com/mungpeter/Useful_Scripts/blob/master/3_simple_plot/pi_h646.violin.png)
