@@ -13,19 +13,18 @@
 
 import sys
 msg = '''\n\t> {0}
-\t\t[ -a: Plot for all data files with Extension (e.g.: .txt) ]
-\t\t[ -f: Plot for one data file ]
-\t\t\t[ Optional: Running in Serial? (Def: 0) ]\n
-e.g.> *.py  -a .txt 
+\t-a < > [ Plot for all data files with Extension (e.g.: .txt) ]
+\t-f < > [ Plot for one data file (e.g.: filename.txt.bz2)     ]
+\tOptional:
+\t-d < > [ delimiter       (Def:'\s+') ]
+\t-x < > [ Name for x-axis (Def: None) ]
+\t-y < > [ Name for y-axis (Def: None) ]
+\t-t < > [ Name for title  (Def: None) ]
+\t-s     [ Running in Serial (Def: False) ]\n
+e.g.> *.py  -a '.txt'
   or
-    > *.py  -f data.txt 1\n'''.format(sys.argv[0])
+    > *.py  -f data.txt -s\n'''.format(sys.argv[0])
 if len(sys.argv) < 2: sys.exit(msg)
-
-try:
-  serial = sys.argv[4]
-except IndexError:
-  serial = 0
-  print('  Running in Parallel\n')
 
 import re,glob
 import numpy as np
@@ -37,13 +36,55 @@ matplotlib.use('Agg')   # to get around Xwindows when over 'ssh'
 
 import matplotlib.pyplot as plt
 from pathos import multiprocessing
-  
+from argparse import ArgumentParser
+
 ################################################
 def main():
 
-  if re.search('-a', sys.argv[1]):
-    file_list = glob.glob('*'+sys.argv[2])
-    snsp = plot_fig(ext=sys.argv[2])
+  args = UserInput()
+  print('')
+  if args.ext:
+    ext = args.ext
+    print('-a', ext)
+  else:
+    ext = False
+  if args.infile: 
+    infile = args.infile
+    print('-f', infile)
+  else:
+    infile = False
+
+  if args.delimiter:
+    delimiter = args.delimiter
+    print('-d', delimiter)
+  else:
+    delimiter = '\s+'
+
+  if args.x_name:
+    x_name = args.x_name
+    print('-x', x_name)
+  else:
+    x_name = False
+
+  if args.y_name:
+    y_name = args.y_name
+    print('-y', y_name)
+  else:
+    y_name = False
+
+  if args.title:
+    title = args.title
+    print('-t', title)
+  else:
+    title = False
+
+  serial = args.serial
+
+  if ext:
+    file_list = glob.glob('*'+ext)
+    if not file_list: sys.exit('\033[31m  ERROR:\0330m No file matches Extension\n')
+    snsp = plot_fig(ext=ext, sep=delimiter, 
+                    x_name=x_name, y_name=y_name, title=title)
 
     if not serial:
       mpi = multiprocessing.Pool(processes=len(file_list))
@@ -54,37 +95,68 @@ def main():
       xxx = [snsp(name) for name in file_list]
   
   else:
-    ext = sys.argv[2].split('.')[-1]
-    snsp = plot_fig(ext='.'+ext)
-    snsp(sys.argv[2])
+    if not infile: sys.exit('\033[31m  ERROR:\033[0m No input file\n')
+    ext = infile.split('.')[-1]
+    snsp = plot_fig(ext='.'+ext, sep=delimiter, 
+                    x_name=x_name, y_name=y_name, title=title)
+    snsp(infile)
+
 
 
 ###########################################################################
 ###########################################################################
 
-def running_avg(x, N):
-  cumsum = np.cumsum(np.insert(x, 0.0, 0.0))
-  return (cumsum[N:] - cumsum[:-N])/ float(N)
-
-
-####################
 class plot_fig(object):
-  def __init__(self, ext=''):
+  def __init__(self, sep='', ext='', x_name='', y_name='', title=''):
     self.ext = ext
+    self.sep = sep
+    self.title = title
+    self.x_name = x_name
+    self.y_name = y_name
+
   def __call__(self, inp):
     return self.sns_plot(inp)
 
   def sns_plot(self, inp):
 
-    data = pd.read_csv( inp, delimiter='\s+', skipinitialspace=True )
+    data = pd.read_csv( inp, delimiter=self.sep, skipinitialspace=True )
     print(inp.split(self.ext))
     fname = inp.split(self.ext)[0]
 
+    names = data.columns
+    if not self.x_name: self.x_name = names[0]
+    if not self.y_name: self.y_name = names[1]
+
     sns.set(rc={"lines.linewidth": 1.0})
     ax = sns.distplot(data.iloc[:,1])
+    ax.set(xlabel=self.x_name, ylabel=self.y_name)
+    if self.title: ax.set_tile(self.title)
 
     plt.savefig(fname+'.histo.png', dpi=150, figsize=(8,6))
+    plt.clf()
+    
 
+######################################################################
+def UserInput():
+  p = ArgumentParser(description='Command Line Arguments')
+
+  p.add_argument('-a', dest='ext', required=False,
+                 help='Plot for all data files with Extension (e.g.: .txt)')
+  p.add_argument('-f', dest='infile', required=False,
+                 help='Plot for one data file (e.g.: filename.txt.bz2)')
+  p.add_argument('-d', dest='delimiter', required=False,
+                 help='delimiter       (Def:"\s+"')
+  p.add_argument('-x', dest='x_name', required=False,
+                 help='Name for x-axis (Def: None)')
+  p.add_argument('-y', dest='y_name', required=False,
+                 help='Name for y-axis (Def: None)')
+  p.add_argument('-t', dest='title', required=False,
+                 help='Name for title  (Def: None)')
+  p.add_argument('-s', dest='serial', action='store_true',
+                 help='Running in Serial (Def: False)')
+
+  args=p.parse_args()
+  return args
 
 ######################################################################
 if __name__ == '__main__':

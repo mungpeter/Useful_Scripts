@@ -106,52 +106,69 @@ ssh-rsa FOW9TUQ2J09Jqp4t0u009UGQ0409QJA.... <username>@<localhost>
 - **Line plot**
 ```
 > ./simple_plot.line.py
-    -a=< > [ Plot for all data files with Extension (e.g.: .txt) ]
-    -f=< > [ Plot for one data file (e.g.: filename.txt.bz2)     ]
+    -a < > [ Plot for all data files with Extension (e.g.: .txt) ]
+    -f < > [ Plot for one data file (e.g.: filename.txt.bz2)     ]
   Optional:
-    -d=< > [ delimiter       (Def:'\s+') ]
-    -x=< > [ Name for x-axis (Def: None) ]
-    -y=< > [ Name for y-axis (Def: None) ]
-    -t=< > [ Name for title  (Def: None) ]
+    -d < > [ delimiter       (Def:'\s+') ]
+    -x < > [ Name for x-axis (Def: None) ]
+    -y < > [ Name for y-axis (Def: None) ]
+    -t < > [ Name for title  (Def: None) ]
     -s     [ Running in Serial (Def: False) ]
     -m     [ Adaptive moving-window averaging (Def: False) ]
 
-e.g.> *.py -f=pi_y207w-h646.txt.bz2  -y=distance  -m
+e.g.> *.py -f pi_y207w-h646.txt.bz2  -y distance  -m
 ```
 ![line](https://github.com/mungpeter/Useful_Scripts/blob/master/3_simple_plot/pi_y207w-h646.png)
 
 - **Histogram of single data**
 ```
 > ./simple_plot.histo.py
-    -a=< > [ Plot for all data files with Extension (e.g.: .txt) ]
-    -f=< > [ Plot for one data file (e.g.: filename.txt.bz2)     ]
+    -a < > [ Plot for all data files with Extension (e.g.: .txt) ]
+    -f < > [ Plot for one data file (e.g.: filename.txt.bz2)     ]
   Optional:
-    -d=< > [ delimiter       (Def:'\s+') ]
-    -x=< > [ Name for x-axis (Def: None) ]
-    -y=< > [ Name for y-axis (Def: None) ]
-    -t=< > [ Name for title  (Def: None) ]
+    -d < > [ delimiter       (Def:'\s+') ]
+    -x < > [ Name for x-axis (Def: None) ]
+    -y < > [ Name for y-axis (Def: None) ]
+    -t < > [ Name for title  (Def: None) ]
     -s     [ Running in Serial (Def: False) ]
 
-e.g.> *.py -a=.txt.bz2
+e.g.> *.py -a .txt.bz2
 ```
 ![histo](https://github.com/mungpeter/Useful_Scripts/blob/master/3_simple_plot/pi_y207w-h646.histo.png)
 
 - **Violin plot (multi-histrogram)**
 ```
 > ./simple_plot.violin.py
-    [ data files ] # separated by space; 1 or 2 columns; only use last col
-    -o=<>  [ output prefix ]
+    -i <+> [ data files ] # separated by space; 1 or 2 columns; only use last col
+    -o < > [ output prefix ]
   Optional:
-    -n=<,> [ column name (Def: from header) ] # separated by ','
-    -d=< > [ delimiter       (Def:'\s+') ]
-    -x=< > [ Name for x-axis (Def: None) ]
-    -y=< > [ Name for y-axis (Def: None) ]
-    -t=< > [ Name for title  (Def: None) ]
+    -n <+> [ column name (Def: from header) ]
+    -d < > [ delimiter       (Def:'\s+') ]
+    -x < > [ Name for x-axis (Def: None) ]
+    -y < > [ Name for y-axis (Def: None) ]
+    -t < > [ Name for title  (Def: None) ]
     -p     [ use Plotnine plotting method (Def: Seaborn) ]
 
-e.g.> *.py pi_h646.1.txt.bz2   pi_h646.1.txt.bz2   pi_h646.1.txt.bz2
-        -o=pi_h646 
-        -n=pi_a208w-h646,pi_r203w-h646,pi_y207w-h646 
-        -x=pi_interact -y='distance (A)'
+e.g.> *.py pi_h646.1.txt.bz2   
+        -i pi_h646.1.txt.bz2 pi_h646.1.txt.bz2 pi_h646.1.txt.bz2
+        -o pi_h646 
+        -n pi_a208w-h646 pi_r203w-h646 pi_y207w-h646 
+        -x pi_interact -y 'distance (A)'
 ```
 ![violin](https://github.com/mungpeter/Useful_Scripts/blob/master/3_simple_plot/pi_h646.violin.png)
+
+#######################################################################################
+
+Required packages:
+```
+csh/tcsh      # shell
+
+python        # 3.7.2+
+  numpy       # 1.17.4
+  pandas      # 0.24.1+
+  matplotlib  # 3.0.2+
+  seaborn     # 0.9.0
+  plotnine    # 0.5.1
+  argparse    # 1.1
+  pathos      # 0.2.3
+```

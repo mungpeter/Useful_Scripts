@@ -12,14 +12,14 @@
 
 import sys
 msg = '''\n  > {0}
-\t[ data files ] # separated by space; 1 or 2 columns; only use last col
-\t-o=<>  [ output prefix ]
+\t-i <+> [ data files ] # separated by space; 1 or 2 columns; only use last col
+\t-o < > [ output prefix ]
 \tOptional:
-\t-d=< > [ delimiter (Def:'\s+') ]
-\t-n=<,> [ column name (Def: from header) ] # separated by ','
-\t-x=< > [ Name for x-axis ]
-\t-y=< > [ Name for y-axis ]
-\t-t=< > [ Name for title  ]
+\t-n <+> [ column name (Def: from header) ]
+\t-d < > [ delimiter       (Def:'\s+') ]
+\t-x < > [ Name for x-axis (Def: None) ]
+\t-y < > [ Name for y-axis (Def: None) ]
+\t-t < > [ Name for title  (Def: None) ]
 \t-p     [ use Plotnine plotting method (Def: Seaborn) ]\n
 e.g.> *.py  x.txt y.txt z.txt -o=output\n'''.format(sys.argv[0])
 if len(sys.argv) < 2: sys.exit(msg)
@@ -27,74 +27,59 @@ if len(sys.argv) < 2: sys.exit(msg)
 import re,glob
 import numpy as np
 import pandas as pd
-import seaborn as sns
-sns.set(style='whitegrid')
-#sns.set(color_codes=True)
 import matplotlib
 matplotlib.use('Agg')   # to get around Xwindows when over 'ssh'
 
 import matplotlib.pyplot as plt
-import plotnine as p9
+from argparse import ArgumentParser
 
 ################################################
 def main():
 
+  args = UserInput()
   print('')
-  for idx, var in enumerate(sys.argv):
-    if re.search('-d=', var):
-      delimiter = var.split('=')[1]
-      sys.argv.remove(var)
-      print('-d', sys.argv)
-    else:
-      delimiter = '\s+'
+  if args.infile:
+    infile = args.infile
+    print('-i', infile)
+  if args.outpref: 
+    outpref = args.outpref
+    print('-o', outpref)
 
-  for idx, var in enumerate(sys.argv):
-    if re.search('-n=', var):
-      col_names = var.split('=')[1].split(',')
-      sys.argv.remove(var)
-      print('-n=', col_names)
-    else:
-      col_names = False
+  if args.col_names:
+    col_names = args.col_names
+    print('-n', col_names)
+  else:
+    col_names = False
 
-  for idx, var in enumerate(sys.argv):
-    if re.search('-o=', var):
-      outpref = var.split('=')[1]
-      sys.argv.remove(var)
-      print('-o=', outpref)
+  if args.delimiter:
+    delimiter = args.delimiter
+    print('-d', delimiter)
+  else:
+    delimiter = '\s+'
 
-  for idx, var in enumerate(sys.argv):
-    if re.search('-x=', var):
-      x_name = var.split('=')[1]
-      sys.argv.remove(var)
-      print('-x=', x_name)
-    else:
-      x_name = 'variable'
+  if args.x_name:
+    x_name = args.x_name
+    print('-x', x_name)
+  else:
+    x_name = False
 
-  for idx, var in enumerate(sys.argv):
-    if re.search('-y=', var):
-      y_name = var.split('=')[1]
-      sys.argv.remove(var)
-      print('-y=', y_name)
-    else:
-      y_name = 'value'
+  if args.y_name:
+    y_name = args.y_name
+    print('-y', y_name)
+  else:
+    y_name = False
 
-  for idx, var in enumerate(sys.argv):
-    if re.search('-t=', var):
-      title = var.split('=')[1]
-      sys.argv.remove(var)
-      print('-t=', title)
-    else:
-      title = ''
+  if args.title:
+    title = args.title
+    print('-t', title)
+  else:
+    title = False
 
-  for idx, var in enumerate(sys.argv):
-    if re.search('-p', var):
-      use_p9 = True
-      sys.argv.remove(var)
-    else:
-      use_p9 = False
+  use_p9 = args.use_p9
 
+###################################
   df_list = [pd.read_csv(f, delimiter=delimiter, skipinitialspace=True) 
-               for f in sys.argv[1:]]
+                for f in infile]
 
   ## only take input with 1 or 2 columns; for 2 columns, 1st is always removed
   lg_list = []
@@ -119,7 +104,9 @@ def main():
 
   ## plotnine method
   if use_p9:
+    import plotnine as p9
     Quant = [.25,.5,.75]
+
     df_plot = ( p9.ggplot(lg_df,
       p9.aes( x=x_name ,y=y_name, fill=x_name )) +
       p9.geom_violin(width=.75, draw_quantiles=Quant, show_legend=False) + 
@@ -132,14 +119,41 @@ def main():
               width=8, height=6, units='in' )
   else:
     ## Seaborn method
+    import seaborn as sns
+    sns.set(style='whitegrid')
+    
     ax = sns.violinplot(x=x_name, y=y_name, data=lg_df,
                         linewidth=1, inner='box')
     if title: ax.set_title(title)
 
     plt.savefig(outpref+'.violin.png', dpi=150, figsize=(8,6))
+    plt.clf()
 
 
+######################################################################
+def UserInput():
+  p = ArgumentParser(description='Command Line Arguments')
 
+  p.add_argument('-i', dest='infile', required=True, nargs="+",
+                 help='Plot for data files (e.g.: x.txt y.txt z.txt)')
+  p.add_argument('-o', dest='outpref', required=True,
+                 help='Output prefix')
+
+  p.add_argument('-n', dest='col_names', required=False, nargs="+",
+                 help='Custom Column names (e.g.: x_dist y_dist z_dist)')
+  p.add_argument('-d', dest='delimiter', required=False,
+                 help='delimiter       (Def:"\s+"')
+  p.add_argument('-x', dest='x_name', required=False,
+                 help='Name for x-axis (Def: None)')
+  p.add_argument('-y', dest='y_name', required=False,
+                 help='Name for y-axis (Def: None)')
+  p.add_argument('-t', dest='title', required=False,
+                 help='Name for title  (Def: None)')
+  p.add_argument('-p', dest='use_p9', action='store_true',
+                 help='Use Plotnine styling (Def: Seaborn)')
+
+  args=p.parse_args()
+  return args
 ######################################################################
 if __name__ == '__main__':
   main()
