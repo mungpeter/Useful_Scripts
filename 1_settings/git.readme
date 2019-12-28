@@ -1,0 +1,7 @@
+cd 9_scripts/3_program/plotting/RAMAplot/
+lla
+mkdir RAMAplot_git
+git init
+git remote add origin <get ssh key of the repository RAMAplot from github, under clone/download button>
+git pull origin master
+

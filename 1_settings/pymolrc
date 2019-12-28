@@ -1,0 +1,23 @@
+#show cartoon
+#hide lines, polymer
+#show sticks, organic
+#show sticks, resname SEP+TPO+PTR+HIP
+#show lines, poly within 6 of org
+#hide everything, resn HOH
+#sele active_water, resn HOH within 5 of org
+#show sphere, active_water
+#alter active_water, vdw=0.4
+#sele metal,resn MG*+ZN*+CA*+MN*+FE*+CO*
+#show sphere, metal
+#alter metal, vdw=0.7
+#dist HB, org and elem n+s+o, poly and elem n+s+o, 3.7
+#dist HW, resname HOH+WAT, org and elem n+s+o, 3.7
+#dist HP, resname HOH+WAT within 4.1 of org, poly and elem n+s+o, 3.7
+
+set cartoon_oval_length, 0.8
+set cartoon_oval_width, 0.2
+set cartoon_rect_length, 0.8
+set cartoon_rect_width, 0.2
+set_bond stick_radius, .15, all
+set dash_gap, 0.3
+
