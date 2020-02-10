@@ -6,15 +6,14 @@
 #
 #  v1.   19.12.27
 #
-#  Do very simple line plot for one data file or multiple data files with
-#  same file extension. Data is averaged using a moving window of variable
-#  size, depending on the size of the data available
+#  Do very simple 2D-scatter plot for one or multiple data files with
+#  same file extension.
 #
 ##########################################################################
 
 import sys
 msg = '''\n\t> {0}
-\t-a < > [ Plot for all data files with Extension (e.g.: .txt) ]
+\t-a < > [ Plot for all data files with Extension (e.g.: .txt) ] only first 2 cols
 \t-f < > [ Plot for one data file (e.g.: filename.txt.bz2)     ]
 \tOptional:
 \t-d < > [ delimiter       (Def:"\s+") ]
@@ -22,18 +21,18 @@ msg = '''\n\t> {0}
 \t-y < > [ Name for y-axis (Def: None) ]
 \t-t < > [ Name for title  (Def: None) ]
 \t-l <+> [ Set (bottom top) y-limits (Def: None) ]
-\t-s     [ Running in Serial (Def: False) ]
-\t-m     [ Adaptive moving-window averaging (Def: False) ]\n
-e.g.> *.py  -a='.txt'
+\t-den   [ Plot as density (Def: False) ]
+\t-s     [ Running in Serial (Def: False) ]\n
+e.g.> *.py  -a '.txt'
   or
-    > *.py  -f=data.txt -s\n'''.format(sys.argv[0])
+    > *.py  -f data.txt -s\n'''.format(sys.argv[0])
 if len(sys.argv) < 2: sys.exit(msg)
 
 import re,glob
 import numpy as np
 import pandas as pd
 import seaborn as sns
-
+sns.set(color_codes=True)
 import matplotlib
 matplotlib.use('Agg')   # to get around Xwindows when over 'ssh'
 
@@ -87,15 +86,19 @@ def main():
   else:
     title = False
 
-  serial = args.serial
-  mv_avg = args.mv_avg
+  if args.density:
+    density = True
+  else:
+    density = False
 
+  serial = args.serial
 
   if ext:
     file_list = glob.glob('*'+ext)
     if not file_list: sys.exit('\033[31m  ERROR:\0330m No file matches Extension\n')
-    snsp = plot_fig(ext=ext, sep=delimiter, mv_avg=mv_avg,
-                    x_name=x_name, y_name=y_name, title=title, y_lim=y_lim)
+    snsp = plot_fig( ext=ext, sep=delimiter, 
+                     x_name=x_name, y_name=y_name, title=title,
+                     y_lim=y_lim, density=density )
 
     if not serial:
       mpi = multiprocessing.Pool(processes=len(file_list))
@@ -108,29 +111,26 @@ def main():
   else:
     if not infile: sys.exit('\033[31m  ERROR:\033[0m No input file\n')
     ext = infile.split('.')[-1]
-    snsp = plot_fig(ext='.'+ext, sep=delimiter, mv_avg=mv_avg,
-                    x_name=x_name, y_name=y_name, title=title, y_lim=y_lim)
+    snsp = plot_fig( ext='.'+ext, sep=delimiter, 
+                     x_name=x_name, y_name=y_name, title=title, 
+                     y_lim=y_lim, density=density )
     snsp(infile)
 
 
+
 ###########################################################################
 ###########################################################################
 
-def running_avg(x, N):
-  cumsum = np.cumsum(np.insert(x, 0.0, 0.0))
-  return (cumsum[N:] - cumsum[:-N])/ float(N)
-
-
-####################
 class plot_fig(object):
-  def __init__(self, sep='', ext='', x_name='', y_name='', title='', mv_avg='', y_lim=''):
+  def __init__( self, sep='', ext='', x_name='', y_name='', title='', 
+                      y_lim='', density='' ):
     self.ext = ext
     self.sep = sep
     self.title = title
     self.x_name = x_name
     self.y_name = y_name
-    self.mv_avg = mv_avg
     self.y_lim  = y_lim
+    self.density = density
 
   def __call__(self, inp):
     return self.sns_plot(inp)
@@ -145,38 +145,22 @@ class plot_fig(object):
     if not self.x_name: self.x_name = names[0]
     if not self.y_name: self.y_name = names[1]
 
-    ## do adaptive moving window averaging
-    if self.mv_avg:
-      y = data[data.columns[1]]
+    sns.set(rc={"lines.linewidth": 1.0})
 
-      if len(data) <= 50:
-        N = 5
-      elif len(data) <= 100:
-        N = 10
-      elif len(data) <= 500:
-        N = 25
-      elif len(data) <= 1000:
-        N = 50
-      else:
-        N = 100
+    if not self.density:
+      ax = sns.jointplot( x=self.x_name, y=self.y_name, data=data.iloc[:,0:2],
+                           alpha=0.5 )
+    else:
+      ax = sns.jointplot( x=self.x_name, y=self.y_name, data=data.iloc[:,0:2],
+                          kind='kde' )
 
-      y1 = y.rolling(window=N).median().iloc[N-1:].values
-      y2 = pd.DataFrame(y1, columns=[data.columns[1]])
-
-      data2 = pd.concat([ data[data.columns[0]], y2  ], axis=1)
-      data  = data2
-
-
-    sns.set(rc={"lines.linewidth": 0.33})
-    ax = sns.lineplot(x=data.columns[0], y=data.columns[1], data=data,
-                      ci='sd', err_style='band')
-    ax.set(xlabel=self.x_name, ylabel=self.y_name)
+#    ax.set(xlabel=self.x_name, ylabel=self.y_name)
     if self.title: ax.set_title(self.title)
     if self.y_lim is not None: ax.set(ylim=self.y_lim)
 
-    plt.savefig(fname+'.png', dpi=150, figsize=(8,6))
+    plt.savefig(fname+'.scatter.png', dpi=150, figsize=(8,6))
     plt.clf()
-
+    
 
 ######################################################################
 def UserInput():
@@ -196,11 +180,11 @@ def UserInput():
                  help='Name for title  (Def: None)')
   p.add_argument('-l', dest='y_lim', required=False, nargs="+",
                  help='Set (bottom top) y-limits (Def: None)')
-
+  
   p.add_argument('-s', dest='serial', action='store_true',
                  help='Running in Serial (Def: False)')
-  p.add_argument('-m', dest='mv_avg', action='store_true',
-                 help='Adaptive moving-window averaging (Def: False)')
+  p.add_argument('-den', dest='density', action='store_true',
+                 help='Plot as density (Def: False)')
 
   args=p.parse_args()
   return args

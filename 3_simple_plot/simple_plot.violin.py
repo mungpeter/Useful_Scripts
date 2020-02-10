@@ -6,7 +6,7 @@
 #
 #  v1.   19.12.27
 #
-#  Do very simple violin-type histogram for *multiple* data files
+#  Do very simple violin-type histogram for *multiple* data files at once
 #
 ##########################################################################
 
@@ -20,6 +20,7 @@ msg = '''\n  > {0}
 \t-x < > [ Name for x-axis (Def: None) ]
 \t-y < > [ Name for y-axis (Def: None) ]
 \t-t < > [ Name for title  (Def: None) ]
+\t-l <+> [ Set (bottom top) y-limits (Def: None) ]
 \t-p     [ use Plotnine plotting method (Def: Seaborn) ]\n
 e.g.> *.py  x.txt y.txt z.txt -o=output\n'''.format(sys.argv[0])
 if len(sys.argv) < 2: sys.exit(msg)
@@ -68,6 +69,11 @@ def main():
     print('-y', y_name)
   else:
     y_name = False
+  if args.y_lim:
+    y_lim = np.array(args.y_lim, dtype=np.float32)
+    print('-l', y_lim)
+  else:
+    y_lim = None
 
   if args.title:
     title = args.title
@@ -107,10 +113,15 @@ def main():
     import plotnine as p9
     Quant = [.25,.5,.75]
 
+    if y_lim is not None:
+      set_ylim = p9.ylim(y_lim)
+    else:
+      set_ylim = p9.ylim([lg_df[y_name].min(),lg_df[y_name].max()])
+
     df_plot = ( p9.ggplot(lg_df,
       p9.aes( x=x_name ,y=y_name, fill=x_name )) +
       p9.geom_violin(width=.75, draw_quantiles=Quant, show_legend=False) + 
-      p9.ggtitle(title) + p9.theme_classic() + 
+      p9.ggtitle(title) + p9.theme_classic() + set_ylim +
       p9.theme( text = p9.element_text(size=12, color='black'), 
           axis_text_x = p9.element_text(angle=33),
           panel_grid_major_y = p9.element_line(color='gray', alpha=.5) ) ) 
@@ -125,6 +136,7 @@ def main():
     ax = sns.violinplot(x=x_name, y=y_name, data=lg_df,
                         linewidth=1, inner='box')
     if title: ax.set_title(title)
+    if y_lim is not None: ax.set(ylim=y_lim)
 
     plt.savefig(outpref+'.violin.png', dpi=150, figsize=(8,6))
     plt.clf()
@@ -142,13 +154,16 @@ def UserInput():
   p.add_argument('-n', dest='col_names', required=False, nargs="+",
                  help='Custom Column names (e.g.: x_dist y_dist z_dist)')
   p.add_argument('-d', dest='delimiter', required=False,
-                 help='delimiter       (Def:"\s+"')
+                 help='delimiter       (Def:"\s+")')
   p.add_argument('-x', dest='x_name', required=False,
                  help='Name for x-axis (Def: None)')
   p.add_argument('-y', dest='y_name', required=False,
                  help='Name for y-axis (Def: None)')
   p.add_argument('-t', dest='title', required=False,
                  help='Name for title  (Def: None)')
+  p.add_argument('-l', dest='y_lim', required=False, nargs="+",
+                 help='Set (bottom top) y-limits (Def: None)')
+
   p.add_argument('-p', dest='use_p9', action='store_true',
                  help='Use Plotnine styling (Def: Seaborn)')
 

@@ -103,7 +103,7 @@ ssh-rsa FOW9TUQ2J09Jqp4t0u009UGQ0409QJA.... <username>@<localhost>
 # Simple plotting
 - for very simple plotting of data file(s). Plot of a single line of data over time; histrogram (distribution) of a data file; or histogram of several data files as violin plot.
 
-- **Line plot**
+- **Single-Line plot**
 ```
 > ./simple_plot.line.py
     -a < > [ Plot for all data files with Extension (e.g.: .txt) ]
@@ -113,6 +113,7 @@ ssh-rsa FOW9TUQ2J09Jqp4t0u009UGQ0409QJA.... <username>@<localhost>
     -x < > [ Name for x-axis (Def: None) ]
     -y < > [ Name for y-axis (Def: None) ]
     -t < > [ Name for title  (Def: None) ]
+    -l <+> [ Set (bottom top) y-limits (Def: None) ]
     -s     [ Running in Serial (Def: False) ]
     -m     [ Adaptive moving-window averaging (Def: False) ]
 
@@ -130,11 +131,30 @@ e.g.> *.py -f pi_y207w-h646.txt.bz2  -y distance  -m
     -x < > [ Name for x-axis (Def: None) ]
     -y < > [ Name for y-axis (Def: None) ]
     -t < > [ Name for title  (Def: None) ]
+    -l <+> [ Set (bottom top) y-limits (Def: None) ]
     -s     [ Running in Serial (Def: False) ]
 
-e.g.> *.py -a .txt.bz2
+e.g.> *.py -a .txt.bz2  -l 2 12
 ```
 ![histo](https://github.com/mungpeter/Useful_Scripts/blob/master/3_simple_plot/pi_y207w-h646.histo.png)
+
+- ** 2D-Scatter plot **
+```
+> ./simple_plot.scatter.py
+    -a < > [ Plot for all data files with Extension (e.g.: .txt) ] only take 1st 2 cols
+    -f < > [ Plot for one data file (e.g.: filename.txt.bz2)     ]
+  Optional:
+    -d < > [ delimiter       (Def:'\s+') ]
+    -x < > [ Name for x-axis (Def: None) ]
+    -y < > [ Name for y-axis (Def: None) ]
+    -t < > [ Name for title  (Def: None) ]
+    -l <+> [ Set (bottom top) y-limits (Def: None) ]
+    -den   [ Plot as density (Def: False) ]
+    -s     [ Running in Serial (Def: False) ]
+
+e.g.> *.py -f fgf21-s1-wt.dpeaks.dvd_plot.txt.bz2 -den  
+```
+![histo](https://github.com/mungpeter/Useful_Scripts/blob/master/3_simple_plot/fgf21-s1-wt.dpeaks.dvd_plot.txt.scatter.png)
 
 - **Violin plot (multi-histrogram)**
 ```
@@ -147,6 +167,7 @@ e.g.> *.py -a .txt.bz2
     -x < > [ Name for x-axis (Def: None) ]
     -y < > [ Name for y-axis (Def: None) ]
     -t < > [ Name for title  (Def: None) ]
+    -l <+> [ Set (bottom top) y-limits (Def: None) ]
     -p     [ use Plotnine plotting method (Def: Seaborn) ]
 
 e.g.> *.py pi_h646.1.txt.bz2   

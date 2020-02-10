@@ -16,10 +16,11 @@ msg = '''\n\t> {0}
 \t-a < > [ Plot for all data files with Extension (e.g.: .txt) ]
 \t-f < > [ Plot for one data file (e.g.: filename.txt.bz2)     ]
 \tOptional:
-\t-d < > [ delimiter       (Def:'\s+') ]
+\t-d < > [ delimiter       (Def:"\s+") ]
 \t-x < > [ Name for x-axis (Def: None) ]
 \t-y < > [ Name for y-axis (Def: None) ]
 \t-t < > [ Name for title  (Def: None) ]
+\t-l <+> [ Set (bottom top) y-limits (Def: None) ]
 \t-s     [ Running in Serial (Def: False) ]\n
 e.g.> *.py  -a '.txt'
   or
@@ -72,6 +73,12 @@ def main():
   else:
     y_name = False
 
+  if args.y_lim:
+    y_lim = np.array(args.y_lim, dtype=np.float32)
+    print('-l', y_lim)
+  else:
+    y_lim = None
+
   if args.title:
     title = args.title
     print('-t', title)
@@ -84,7 +91,7 @@ def main():
     file_list = glob.glob('*'+ext)
     if not file_list: sys.exit('\033[31m  ERROR:\0330m No file matches Extension\n')
     snsp = plot_fig(ext=ext, sep=delimiter, 
-                    x_name=x_name, y_name=y_name, title=title)
+                    x_name=x_name, y_name=y_name, title=title, y_lim=y_lim)
 
     if not serial:
       mpi = multiprocessing.Pool(processes=len(file_list))
@@ -98,7 +105,7 @@ def main():
     if not infile: sys.exit('\033[31m  ERROR:\033[0m No input file\n')
     ext = infile.split('.')[-1]
     snsp = plot_fig(ext='.'+ext, sep=delimiter, 
-                    x_name=x_name, y_name=y_name, title=title)
+                    x_name=x_name, y_name=y_name, title=title, y_lim=y_lim)
     snsp(infile)
 
 
@@ -107,12 +114,13 @@ def main():
 ###########################################################################
 
 class plot_fig(object):
-  def __init__(self, sep='', ext='', x_name='', y_name='', title=''):
+  def __init__(self, sep='', ext='', x_name='', y_name='', title='', y_lim=''):
     self.ext = ext
     self.sep = sep
     self.title = title
     self.x_name = x_name
     self.y_name = y_name
+    self.y_lim  = y_lim
 
   def __call__(self, inp):
     return self.sns_plot(inp)
@@ -130,7 +138,8 @@ class plot_fig(object):
     sns.set(rc={"lines.linewidth": 1.0})
     ax = sns.distplot(data.iloc[:,1])
     ax.set(xlabel=self.x_name, ylabel=self.y_name)
-    if self.title: ax.set_tile(self.title)
+    if self.title: ax.set_title(self.title)
+    if self.y_lim is not None: ax.set(ylim=self.y_lim)
 
     plt.savefig(fname+'.histo.png', dpi=150, figsize=(8,6))
     plt.clf()
@@ -145,13 +154,16 @@ def UserInput():
   p.add_argument('-f', dest='infile', required=False,
                  help='Plot for one data file (e.g.: filename.txt.bz2)')
   p.add_argument('-d', dest='delimiter', required=False,
-                 help='delimiter       (Def:"\s+"')
+                 help='delimiter       (Def:"\s+")')
   p.add_argument('-x', dest='x_name', required=False,
                  help='Name for x-axis (Def: None)')
   p.add_argument('-y', dest='y_name', required=False,
                  help='Name for y-axis (Def: None)')
   p.add_argument('-t', dest='title', required=False,
                  help='Name for title  (Def: None)')
+  p.add_argument('-l', dest='y_lim', required=False, nargs="+",
+                 help='Set (bottom top) y-limits (Def: None)')
+
   p.add_argument('-s', dest='serial', action='store_true',
                  help='Running in Serial (Def: False)')
 
