@@ -12,26 +12,29 @@
 
 import sys
 msg = '''\n  > {0}
-\t-i <+> [ data files ] # separated by space; 1 or 2 columns; only use last col
-\t-o < > [ output prefix ]
+\t-i <+>     [ Data file(s) ] # separated by space; 1 or 2 columns; only use last col
+\t-o < >     [ Output prefix ]
 \tOptional:
-\t-n <+> [ column name (Def: from header) ]
-\t-d < > [ delimiter       (Def:'\s+') ]
-\t-x < > [ Name for x-axis (Def: None) ]
-\t-y < > [ Name for y-axis (Def: None) ]
-\t-t < > [ Name for title  (Def: None) ]
-\t-l <+> [ Set (bottom top) y-limits (Def: None) ]
-\t-p     [ use Plotnine plotting method (Def: Seaborn) ]\n
-e.g.> *.py  x.txt y.txt z.txt -o=output\n'''.format(sys.argv[0])
-if len(sys.argv) < 2: sys.exit(msg)
+\t-n <+>     [ Column name (Def: from header) ]
+\t-d < >     [ Delimiter       (Def:'\s+') ]
+\t-x < >     [ Name for x-axis (Def: None) ]
+\t-y < >     [ Name for y-axis (Def: None) ]
+\t-t < >     [ Name for title  (Def: None) ]
+\t-l <+>     [ Set (bottom top) y-limits (Def: None) ]
+\t-p         [ Use Plotnine plotting method (Def: Seaborn) ]
+\t-img < >   [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
+\t-dpi < >   [ Figure quality (Def: 150) ]\n
+e.g.> *.py   -i x.txt y.txt z.txt    -o output\n'''.format(sys.argv[0])
+if len(sys.argv) == 1: sys.exit(msg)
 
 import re,glob
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
+import matplotlib.pyplot as plt
+
 matplotlib.use('Agg')   # to get around Xwindows when over 'ssh'
 
-import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 
 ################################################
@@ -82,10 +85,18 @@ def main():
     title = False
 
   use_p9 = args.use_p9
+  if args.img:
+    img = args.img
+  else:
+    img = 'png'
+  if args.dpi:
+    dpi = int(args.dpi)
+  else:
+    dpi = 150
 
 ###################################
-  df_list = [pd.read_csv(f, delimiter=delimiter, skipinitialspace=True) 
-                for f in infile]
+  df_list = [ pd.read_csv(f, delimiter=delimiter, skipinitialspace=True) 
+                for f in infile ]
 
   ## only take input with 1 or 2 columns; for 2 columns, 1st is always removed
   lg_list = []
@@ -126,19 +137,21 @@ def main():
           axis_text_x = p9.element_text(angle=33),
           panel_grid_major_y = p9.element_line(color='gray', alpha=.5) ) ) 
 
-    p9.ggsave(filename=outpref+'.violin.png', plot=df_plot, dpi=150, 
-              width=8, height=6, units='in' )
+    p9.ggsave(filename='{0}.violin.{1}'.format(outpref, img), plot=df_plot, 
+              dpi=dpi, format=img, width=8, height=6, units='in' )
+
   else:
     ## Seaborn method
     import seaborn as sns
     sns.set(style='whitegrid')
-    
+
     ax = sns.violinplot(x=x_name, y=y_name, data=lg_df,
                         linewidth=1, inner='box')
     if title: ax.set_title(title)
     if y_lim is not None: ax.set(ylim=y_lim)
 
-    plt.savefig(outpref+'.violin.png', dpi=150, figsize=(8,6))
+    plt.savefig('{0}.violin.{1}'.format(outpref, img), figsize=(8,6),
+                  format=img, dpi=dpi)
     plt.clf()
 
 
@@ -147,25 +160,29 @@ def UserInput():
   p = ArgumentParser(description='Command Line Arguments')
 
   p.add_argument('-i', dest='infile', required=True, nargs="+",
-                 help='Plot for data files (e.g.: x.txt y.txt z.txt)')
+                  help='Plot for data files (e.g.: x.txt y.txt z.txt)')
   p.add_argument('-o', dest='outpref', required=True,
-                 help='Output prefix')
+                  help='Output prefix')
 
   p.add_argument('-n', dest='col_names', required=False, nargs="+",
-                 help='Custom Column names (e.g.: x_dist y_dist z_dist)')
+                  help='Custom Column names (e.g.: x_dist y_dist z_dist)')
   p.add_argument('-d', dest='delimiter', required=False,
-                 help='delimiter       (Def:"\s+")')
+                  help='delimiter       (Def:"\s+")')
   p.add_argument('-x', dest='x_name', required=False,
-                 help='Name for x-axis (Def: None)')
+                  help='Name for x-axis (Def: None)')
   p.add_argument('-y', dest='y_name', required=False,
-                 help='Name for y-axis (Def: None)')
+                  help='Name for y-axis (Def: None)')
   p.add_argument('-t', dest='title', required=False,
-                 help='Name for title  (Def: None)')
+                  help='Name for title  (Def: None)')
   p.add_argument('-l', dest='y_lim', required=False, nargs="+",
-                 help='Set (bottom top) y-limits (Def: None)')
+                  help='Set (bottom top) y-limits (Def: None)')
+  p.add_argument('-img', dest='img', required=False,
+                  help='Figure format: png|jpg|svg|eps|pdf (Def: png)')
+  p.add_argument('-dpi', dest='dpi', required=False,
+                  help='Figure quality  (Def: 150)')
 
   p.add_argument('-p', dest='use_p9', action='store_true',
-                 help='Use Plotnine styling (Def: Seaborn)')
+                  help='Use Plotnine styling (Def: Seaborn)')
 
   args=p.parse_args()
   return args

@@ -13,29 +13,32 @@
 
 import sys
 msg = '''\n\t> {0}
-\t-a < > [ Plot for all data files with Extension (e.g.: .txt) ]
-\t-f < > [ Plot for one data file (e.g.: filename.txt.bz2)     ]
+\t-a < >     [ Plot for all data files with Extension (e.g.: .txt) ]
+\t-f < >     [ Plot for one data file (e.g.: filename.txt.bz2)     ]
 \tOptional:
-\t-d < > [ delimiter       (Def:"\s+") ]
-\t-x < > [ Name for x-axis (Def: None) ]
-\t-y < > [ Name for y-axis (Def: None) ]
-\t-t < > [ Name for title  (Def: None) ]
-\t-l <+> [ Set (bottom top) y-limits (Def: None) ]
-\t-s     [ Running in Serial (Def: False) ]\n
+\t-d < >     [ Delimiter       (Def:"\s+") ]
+\t-x < >     [ Name for x-axis (Def: None) ]
+\t-y < >     [ Name for y-axis (Def: None) ]
+\t-t < >     [ Name for title  (Def: None) ]
+\t-l <+>     [ Set (bottom top) y-limits (Def: None) ]
+\t-s         [ Running in Serial (Def: False) ]
+\t-img < >   [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
+\t-dpi < >   [ Figure quality (Def: 150) ]\n
 e.g.> *.py  -a '.txt'
   or
     > *.py  -f data.txt -s\n'''.format(sys.argv[0])
-if len(sys.argv) < 2: sys.exit(msg)
+if len(sys.argv) == 1: sys.exit(msg)
 
 import re,glob
+import matplotlib
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import matplotlib.pyplot as plt
+
 sns.set(color_codes=True)
-import matplotlib
 matplotlib.use('Agg')   # to get around Xwindows when over 'ssh'
 
-import matplotlib.pyplot as plt
 from pathos import multiprocessing
 from argparse import ArgumentParser
 
@@ -86,12 +89,20 @@ def main():
     title = False
 
   serial = args.serial
+  if args.img:
+    img = args.img
+  else:
+    img = 'png'
+  if args.dpi:
+    dpi = int(args.dpi)
+  else:
+    dpi = 150
 
   if ext:
     file_list = glob.glob('*'+ext)
     if not file_list: sys.exit('\033[31m  ERROR:\0330m No file matches Extension\n')
-    snsp = plot_fig(ext=ext, sep=delimiter, 
-                    x_name=x_name, y_name=y_name, title=title, y_lim=y_lim)
+    snsp = plot_fig(ext=ext, sep=delimiter, img=img, dpi=dpi,
+                    x_name=x_name, y_name=y_name, title=title, y_lim=y_lim,)
 
     if not serial:
       mpi = multiprocessing.Pool(processes=len(file_list))
@@ -114,13 +125,16 @@ def main():
 ###########################################################################
 
 class plot_fig(object):
-  def __init__(self, sep='', ext='', x_name='', y_name='', title='', y_lim=''):
+  def __init__( self, sep='', ext='', x_name='', y_name='', title='', y_lim='',
+                      img='', dpi='' ):
     self.ext = ext
     self.sep = sep
     self.title = title
     self.x_name = x_name
     self.y_name = y_name
     self.y_lim  = y_lim
+    self.dpi    = dpi
+    self.img    = img
 
   def __call__(self, inp):
     return self.sns_plot(inp)
@@ -141,7 +155,8 @@ class plot_fig(object):
     if self.title: ax.set_title(self.title)
     if self.y_lim is not None: ax.set(ylim=self.y_lim)
 
-    plt.savefig(fname+'.histo.png', dpi=150, figsize=(8,6))
+    plt.savefig('{0}.histo.{1}'.format(fname, self.img), figsize=(8,6),
+                      format=self.img, dpi=self.dpi)
     plt.clf()
     
 
@@ -150,22 +165,26 @@ def UserInput():
   p = ArgumentParser(description='Command Line Arguments')
 
   p.add_argument('-a', dest='ext', required=False,
-                 help='Plot for all data files with Extension (e.g.: .txt)')
+                  help='Plot for all data files with Extension (e.g.: .txt)')
   p.add_argument('-f', dest='infile', required=False,
-                 help='Plot for one data file (e.g.: filename.txt.bz2)')
+                  help='Plot for one data file (e.g.: filename.txt.bz2)')
   p.add_argument('-d', dest='delimiter', required=False,
-                 help='delimiter       (Def:"\s+")')
+                  help='delimiter       (Def:"\s+")')
   p.add_argument('-x', dest='x_name', required=False,
-                 help='Name for x-axis (Def: None)')
+                  help='Name for x-axis (Def: None)')
   p.add_argument('-y', dest='y_name', required=False,
-                 help='Name for y-axis (Def: None)')
+                  help='Name for y-axis (Def: None)')
   p.add_argument('-t', dest='title', required=False,
-                 help='Name for title  (Def: None)')
+                  help='Name for title  (Def: None)')
   p.add_argument('-l', dest='y_lim', required=False, nargs="+",
-                 help='Set (bottom top) y-limits (Def: None)')
+                  help='Set (bottom top) y-limits (Def: None)')
+  p.add_argument('-img', dest='img', required=False,
+                  help='Figure format: png|jpg|svg|eps|pdf (Def: png)')
+  p.add_argument('-dpi', dest='dpi', required=False,
+                  help='Figure quality  (Def: 150)')
 
   p.add_argument('-s', dest='serial', action='store_true',
-                 help='Running in Serial (Def: False)')
+                  help='Running in Serial (Def: False)')
 
   args=p.parse_args()
   return args

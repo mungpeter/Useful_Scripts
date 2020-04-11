@@ -14,30 +14,32 @@
 
 import sys
 msg = '''\n\t> {0}
-\t-a < > [ Plot for all data files with Extension (e.g.: .txt) ]
-\t-f < > [ Plot for one data file (e.g.: filename.txt.bz2)     ]
+\t-a < >     [ Plot for all data files with Extension (e.g.: .txt) ]
+\t-f < >     [ Plot for one data file (e.g.: filename.txt.bz2)     ]
 \tOptional:
-\t-d < > [ delimiter       (Def:"\s+") ]
-\t-x < > [ Name for x-axis (Def: None) ]
-\t-y < > [ Name for y-axis (Def: None) ]
-\t-t < > [ Name for title  (Def: None) ]
-\t-l <+> [ Set (bottom top) y-limits (Def: None) ]
-\t-s     [ Running in Serial (Def: False) ]
-\t-m     [ Adaptive moving-window averaging (Def: False) ]\n
-e.g.> *.py  -a='.txt'
+\t-d < >     [ Delimiter       (Def:"\s+") ]
+\t-x < >     [ Name for x-axis (Def: None) ]
+\t-y < >     [ Name for y-axis (Def: None) ]
+\t-t < >     [ Name for title  (Def: None) ]
+\t-l <+>     [ Set (bottom top) y-limits (Def: None) ]
+\t-s         [ Running in Serial (Def: False) ]
+\t-m         [ Adaptive moving-window averaging (Def: False) ]
+\t-img < >   [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
+\t-dpi < >   [ Figure quality (Def: 150) ]\n
+e.g.> *.py  -a '.txt'
   or
-    > *.py  -f=data.txt -s\n'''.format(sys.argv[0])
-if len(sys.argv) < 2: sys.exit(msg)
+    > *.py  -f data.txt -s\n'''.format(sys.argv[0])
+if len(sys.argv) == 1: sys.exit(msg)
 
 import re,glob
+import matplotlib
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import matplotlib.pyplot as plt
 
-import matplotlib
 matplotlib.use('Agg')   # to get around Xwindows when over 'ssh'
 
-import matplotlib.pyplot as plt
 from pathos import multiprocessing
 from argparse import ArgumentParser
 
@@ -89,6 +91,14 @@ def main():
 
   serial = args.serial
   mv_avg = args.mv_avg
+  if args.img:
+    img = args.img
+  else:
+    img = 'png'
+  if args.dpi:
+    dpi = int(args.dpi)
+  else:
+    dpi = 150
 
 
   if ext:
@@ -109,7 +119,8 @@ def main():
     if not infile: sys.exit('\033[31m  ERROR:\033[0m No input file\n')
     ext = infile.split('.')[-1]
     snsp = plot_fig(ext='.'+ext, sep=delimiter, mv_avg=mv_avg,
-                    x_name=x_name, y_name=y_name, title=title, y_lim=y_lim)
+                    x_name=x_name, y_name=y_name, title=title, y_lim=y_lim,
+                    img=img, dpi=dpi)
     snsp(infile)
 
 
@@ -123,7 +134,8 @@ def running_avg(x, N):
 
 ####################
 class plot_fig(object):
-  def __init__(self, sep='', ext='', x_name='', y_name='', title='', mv_avg='', y_lim=''):
+  def __init__( self, sep='', ext='', x_name='', y_name='', title='', y_lim='',
+                      mv_avg='', img='', dpi='' ):
     self.ext = ext
     self.sep = sep
     self.title = title
@@ -131,6 +143,8 @@ class plot_fig(object):
     self.y_name = y_name
     self.mv_avg = mv_avg
     self.y_lim  = y_lim
+    self.img    = img
+    self.dpi    = dpi
 
   def __call__(self, inp):
     return self.sns_plot(inp)
@@ -174,7 +188,8 @@ class plot_fig(object):
     if self.title: ax.set_title(self.title)
     if self.y_lim is not None: ax.set(ylim=self.y_lim)
 
-    plt.savefig(fname+'.png', dpi=150, figsize=(8,6))
+    plt.savefig('{0}.{1}'.format(fname, self.img), figsize=(8,6),
+                    format=self.img, dpi=self.dpi )
     plt.clf()
 
 
@@ -183,24 +198,28 @@ def UserInput():
   p = ArgumentParser(description='Command Line Arguments')
 
   p.add_argument('-a', dest='ext', required=False,
-                 help='Plot for all data files with Extension (e.g.: .txt)')
+                  help='Plot for all data files with Extension (e.g.: .txt)')
   p.add_argument('-f', dest='infile', required=False,
-                 help='Plot for one data file (e.g.: filename.txt.bz2)')
+                  help='Plot for one data file (e.g.: filename.txt.bz2)')
   p.add_argument('-d', dest='delimiter', required=False,
-                 help='delimiter       (Def:"\s+")')
+                  help='delimiter       (Def:"\s+")')
   p.add_argument('-x', dest='x_name', required=False,
-                 help='Name for x-axis (Def: None)')
+                  help='Name for x-axis (Def: None)')
   p.add_argument('-y', dest='y_name', required=False,
-                 help='Name for y-axis (Def: None)')
+                  help='Name for y-axis (Def: None)')
   p.add_argument('-t', dest='title', required=False,
-                 help='Name for title  (Def: None)')
+                  help='Name for title  (Def: None)')
   p.add_argument('-l', dest='y_lim', required=False, nargs="+",
-                 help='Set (bottom top) y-limits (Def: None)')
+                  help='Set (bottom top) y-limits (Def: None)')
+  p.add_argument('-img', dest='img', required=False,
+                  help='Figure format: png|jpg|svg|eps|pdf (Def: png)')
+  p.add_argument('-dpi', dest='dpi', required=False,
+                  help='Figure quality  (Def: 150)')
 
   p.add_argument('-s', dest='serial', action='store_true',
-                 help='Running in Serial (Def: False)')
+                  help='Running in Serial (Def: False)')
   p.add_argument('-m', dest='mv_avg', action='store_true',
-                 help='Adaptive moving-window averaging (Def: False)')
+                  help='Adaptive moving-window averaging (Def: False)')
 
   args=p.parse_args()
   return args
