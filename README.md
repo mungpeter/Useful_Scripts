@@ -12,6 +12,7 @@
   |-- /2_simple_scripts   # scripts for common linux utility
   |-- /3_simple_plot      # scripts for very simple plotting
 ```
+  
 
 #######################################################################################
 - **Initializing a new Linux (Ubuntu) with common packages**
