@@ -1,0 +1,214 @@
+#!/bin/tcsh
+limit stacksize unlimited
+#cd ~/Dropbox
+
+## Start Amazon Cloud Drive ##
+#if (! -d /media/acd/waltz) then
+#  echo do acd_cli
+#  acd_cli sync
+#  acd_cli mount /media/acd
+#endif
+
+#### User Settings ####
+#eval  `dircolors ~/.dir_colors`
+#alias ls 'ls -GFh --color=auto'
+alias ls 'ls -GFh'
+alias ll 'ls -l'
+alias la 'ls -a'
+alias lla 'ls -la'
+alias cp 'cp -p'
+#alias grep 'grep --color=auto'
+alias df 'df -ah'
+alias rm 'trash'
+alias rmx '/bin/rm'
+alias count 'll . | wc -l'
+alias alljob 'ps aux | less'
+
+alias ssh 'ssh -Y'
+alias scp 'scp -p'
+alias bzip2 'bzip2 -9'
+alias gzip 'gzip -9 --rsyncable'
+alias image 'eog'
+alias dirsize "du -h --max-depth=1 "	# followed by the directory name
+setenv TERM xterm
+
+## Check CPU stats ##
+alias mpstat 'mpstat -P ALL' #Check CPU stat
+alias chknodes 'ps -eo pcpu,pid,user,args | sort -k 1 -r |head -10'
+alias isostat 'isostat -xtc 5 3'
+alias gcpu 'gnome-system-monitor'
+
+alias d 'cd /Users/ungm/Dropbox'
+alias se, 'sed "s/,/\t/g" '
+
+#### Logging ####
+alias mva    'ssh ungp01@chimera.hpc.mssm.edu'
+alias rumba  'ssh pmung@rumba.anbg.mssm.edu'	# 10.90.122.117
+
+setenv MVA    'ungp01@minerva.hpc.mssm.edu://hpc/users/ungp01'
+setenv MVASCR 'ungp01@minerva.hpc.mssm.edu://sc/hydra/scratch/ungp01'
+setenv MVAPJ  'ungp01@minerva.hpc.mssm.edu://sc/hydra/projects/schlea02a'
+setenv RUMBA  'pmung@rumba.anbg.mssm.edu://home/pmung'
+
+
+
+#### Software Settings ####
+setenv SCRIPT /Users/ungm/Dropbox/9_scripts
+setenv SOFT   /Applications
+
+## Juypter, VS Code ##
+alias code "$SOFT/Visual\ Studio\ Code.app/Contents/Resources/app/bin/code"
+alias juypter 'python3 /usr/local/bin/juypter notebook'
+
+## Pymol 2.2.3 ##
+alias pymol $SOFT/PyMOL.app/Contents/bin/pymol
+
+## Chimera 1.8 ##
+#setenv CHIM_PATH  $SOFT/chimera-1.8
+
+## VMD 1.9.2 ##
+#setenv VMD_PATH $SOFT/vmd-1.9.2
+#setenv VMDPATH  $SOFT/vmd-1.9.2/vmd192
+
+## Coot 0.8.9.1 ##
+#setenv COOT_PREFIX $SOFT/coot-0.8.9.1
+
+## ChemAxon Marvin ##
+setenv MARVIN $SOFT/MarvinSuite/bin
+alias msketch $MARVIN/msketch
+alias mview $MARVIN/nview
+
+## TM-Score & TM-Align ##
+#setenv TM $SOFT/ZhangLab
+
+## POVME ## 
+#setenv POVME $SOFT/povme-2.1
+#alias povme "python $POVME/POVME2.py "
+
+## T-Coffee Alignment ##
+# installed as package
+# sap mafft clustalo clustalw dialign-tx poa probcons muscle kalign 
+# amap proda fsa blastTMalign mustang prank kalign
+#setenv BLASTDB /home/pmung/blast_db
+
+## ConCoord 2.1.2 /tConCoord 1.0 ##
+#setenv CONCOORD $SOFT/concoord_2.1.2
+#setenv CONCOORDBIN $CONCOORD/bin
+#setenv CONCOORDLIB $CONCOORD/lib
+
+## Scwrl 4.0 -- Side-Chain Optimzer ##
+#setenv SC_DIR $SOFT/scwrl4
+
+## Amber 16 ##
+#setenv AMBERHOME $SOFT/amber18
+
+## CPPTRAJ github ## 19.06.20
+#setenv CTRAJHOME $SOFT/ctraj
+#alias ctraj $CTRAJHOME/bin/cpptraj
+#alias ctraj.mpi $CTRAJHOME/bin/cpptraj.MPI
+#alias ctraj.omp $CTRAJHOME/bin/cpptraj.OMP
+
+## Gromacs 5.0.5 ##
+#setenv GROMACSHOME $SOFT/gromacs-5.0.5		# OpenMP Enabled
+
+
+## AutoDock 4.2.5.1 / AD_Vina 1.1.2 / MGLTools 1.5.6 ##
+#setenv MGL_PATH  $SOFT/mgltools-1.5.6
+#setenv AD4_PATH  $SOFT/autodock-4.2.6
+#setenv VINA_PATH $SOFT/AD_vina-1.1.2
+
+#setenv ADTUTIL   $MGL_PATH/MGLToolsPckgs/AutoDockTools/Utilities24
+
+
+## MOE ##
+#setenv MOE $SOFT/moe2015
+
+## OpenEye ##
+#setenv OE_DIR  $SOFT/openeye
+#setenv OE_ARCH Ubuntu-10.04-x64:Ubuntu-12.04-x64:redhat-RHEL5-x64:Ubuntu-14.04-x64:Ubuntu-16.04-x64:Ubuntu-18.04
+#setenv OE_LICENSE $OE_DIR/oe_license.txt
+
+## Schrodinger ##
+#setenv SCHRODINGER $SOFT/schrodinger2019-4
+#setenv SCHROD_LICENSE_FILE 43723@license.hpc.mssm.edu
+#setenv SCHROD_LICENSE_FILE  27000@license.hpc.mssm.edu
+#setenv PYMOL4MAESTRO /home/software/pymol-223/pymol #$PYMOL_PATH
+#alias maestro 'setenv PYTHONPATH python3; $SCHRODINGER/maestro -NOSGL'
+
+ # ligprep setting for ligand - 1 tautomer, 1 charge state # 2016-3+
+#alias sch_ligprep "$SCHRODINGER/ligprep -i 2 -epik -We,-ph,7.2,-pht,0.3,-ms,1 -s 1 -r 1 -t 2 -bff 16 "  # pre 2015-3
+#alias sch_ligprep "setenv PYTHONPATH python3; $SCHRODINGER/ligprep -i 2 -epik -We,-ph,7.2,-pht,0.3,-ms,1 -s 1 -t 2 -bff 16 "
+
+## MixMD ##
+#alias xplor "python ~/Dropbox/9_scripts/2_MD/mixMD/xplor_Normalize.py"
+
+
+############################################################################
+
+## Python3.7 Paths to libraries ##
+  ## MiniConda python3 ##
+  alias python 'python3'
+  echo `python --version`
+
+  setenv CONDA /Users/ungm/miniconda3
+  source $CONDA/etc/profile.d/conda.csh
+#  conda activate cdpy3
+
+
+  setenv PYTHONPATH $SCRIPT/1_Docking/vina:$SCRIPT/3_program/python:$SCRIPT/3_program/pymol:$SCRIPT/3_program/modeller:$SCRIPT/3_program/rdkit#:/usr/include/python3.6:/usr/lib/x86_64-linux-gnu:$SOFT/parmed-2.7.3:/usr/local/lib/python3.6/dist-packages #:/usr/local/lib/openbabel #:$PYMOL_PATH/lib/python2.7:$PYMOL_PATH/lib/python2.7/lib-tk
+
+  setenv LD_LIBRARY_PATH $SCRIPT/3_program/python:/usr/local/lib:/usr/lib:/usr/local/lib/openbabel#:$AMBERHOME/lib#:/usr/local/lib/python3.6/dist-packages #:/usr/local/lib/python2.7/dist-packages #:$OBABEL/lib
+
+
+############################################################################
+
+#setenv OB_INSTALLDIR /usr/local/lib:/usr/local/lib/openbabel:/usr/local/lib/python2.7/dist-packages
+#:$RDBASE/lib:/usr/lib/x86_64-linux-gnu:/usr/include/python2.7:$PYMOL_PATH/lib/python2.7
+
+## Modeller X.X ##
+# installed as /usr/bin/modX.X
+#alias modeller 'mod9.20'
+setenv LDFLAGS "-L /usr/local/opt/llvm/lib"
+setenv CPPFLAGS "-I /usr/local/opt/llvm/include"
+
+
+#### Set Paths ####
+setenv PATH "$PATH\:/opt/local/bin\:/opt/local/sbin\:/usr/bin\:/usr/local/bin\:/usr/lib"
+#set path = ( $path ~pmung \
+#             /usr/bin  /usr/share /usr/local /usr/local/bin /usr/local/sbin \
+#             /usr/local/opt \
+#             /usr/lib /usr/lib32 /usr/lib64 /usr/local/lib \
+#             $VMD_PATH $COOT_PREFIX/bin \
+#             $AMBERHOME/bin $CTRAJHOME/bin $GROMACSHOME/bin \
+#             $MGL_PATH/bin $ADTUTIL $AD4_PATH $VINA_PATH/bin \
+#             $MARVIN $MARVIN/bin \
+#             $OE_DIR/bin $SC_DIR \
+#	     $DSX/linux64 $POVME $LIGSF \
+#             $SCHRODINGER $SCHRODINGER/utilties \
+#             $MOLBLOCKS \
+#             $CONDA/bin \
+#             $CONCOORD/bin $HOLLOW $TM \
+#             $PYMOL_PATH $CHIM_PATH/bin $CYTOSC )
+#source $AMBERHOME/amber.csh
+#source $GROMACSHOME/bin/GMXRC
+#source $SOFT/tCONCOORD-1.0/tCONCOORDRC.csh
+
+## Mounting the NAS drive ## /etc/fstab
+#if ( ! -e /media/pmung/dlink1/backintime ) then
+#  echo "## Mount the NAS Drive -- sudo mount -a ##" 
+#  sudo mount -a
+#endif
+
+if ! $?PATH setenv PATH '';
+if "${PATH}" != '' setenv PATH "/home/ungm/perl5/bin:${PATH}";
+if "${PATH}" == '' setenv PATH "/home/ungm/perl5/bin";
+if ! $?PERL5LIB setenv PERL5LIB '';
+if "${PERL5LIB}" != '' setenv PERL5LIB "/home/ungm/perl5/lib/perl5:${PERL5LIB}";
+if "${PERL5LIB}" == '' setenv PERL5LIB "/home/ungm/perl5/lib/perl5";
+if ! $?PERL_LOCAL_LIB_ROOT setenv PERL_LOCAL_LIB_ROOT '';
+if "${PERL_LOCAL_LIB_ROOT}" != '' setenv PERL_LOCAL_LIB_ROOT "/home/ungm/perl5:${PERL_LOCAL_LIB_ROOT}";
+if "${PERL_LOCAL_LIB_ROOT}" == '' setenv PERL_LOCAL_LIB_ROOT "/home/ungm/perl5";
+if ! $?PERL_MB_OPT setenv PERL_MB_OPT '';
+setenv PERL_MB_OPT "--install_base "\""/home/ungm/perl5"\""";
+if ! $?PERL_MM_OPT setenv PERL_MM_OPT '';
+setenv PERL_MM_OPT "INSTALL_BASE=/home/ungm/perl5";

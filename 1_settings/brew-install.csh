@@ -81,13 +81,14 @@ cython mdtraj biopython"
 # python 3.6-only chembl_webresource_client
 
   set conda_regular = "\
-numpy scipy matplotlib pandas scikit-learn ipython jupyter openpyxl xlwt \
+numpy scipy matplotlib seaborn pandas ipython jupyter openpyxl xlwt \
 XlsxWriter pillow boost tqdm cairo cython curl "
 
   set conda_forge = ['conda-forge pathos rdkit plotnine jpype1 cairosvg',\
   'conda-forge libxml2 lxml dicttoxml xmltodict', \
   'conda-forge xorg-libx11 tabulate biopython zlib',\
-  'conda-forge mdtraj mdanalysis'] #
+  'conda-forge mdtraj mdanalysis',
+  'anaconda scikit-learn'] #
   #'r rpy2 r-xml2', 'psi4 psi4 resp', \
   #'openbabel openbabel', 'chembl chembl_webresource_client', \
   #'mmcauliffe pyqt5 qt5', 'samoturk pymol', 'hydroid freesasa', \
@@ -127,7 +128,7 @@ endif
 #
 # - R studio packages - 
 # install.packages("...")
-# Matrix dplyr tidyverse reshape2 data.table scales gtable plyr
+# Matrix dplyr tidyverse reshape2 data.table scales gtable
 # mimi manipulate labeling colorspace RColorBrewer gtools lattice httr
 # digest bindr assertthat stringr readxl 
 # Plotly ggplot2 gplots ggseqlogo shiny seqinr cowplot
