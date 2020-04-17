@@ -32,14 +32,14 @@ if ($argv[1] == 'build') then
   openmpi-bin libopenmpi-dev libxi-dev libxmu-dev \
   nedit vim emacs gnome-control-center \
   gparted cifs-utils apt-file sysstat trash-cli \
-  autotools-dev g++ autoconf automake gfortran htop llvm clang \
+  autotools-dev autoconf automake gcc g++ gfortran htop llvm clang \
   openssh-server openssh-client backintime-common backintime-gnome \
   python-pip python3-pip python-dev python-setuptools python-numpy \
   python-reportlab python-pandas python3-tk \
   libfreetype6-dev bioperl python-cairosvg python3-cairosvg \
   sqlite3 libsqlite3-dev libboost-dev libboost-system-dev \
   libboost-thread-dev libboost-serialization-dev libssl-dev \
-  swig git \
+  swig git pdftk \
   software-properties-common apt-transport-https code
   
   wget https://mirrors.kernel.org/ubuntu/pool/main/libp/libpng/libpng12-0_1.2.54-1ubuntu1_amd64.deb
