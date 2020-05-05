@@ -23,7 +23,7 @@ endif
 if ($argv[1] == 'build') then
   brew install \
     cask bzip2 zlib python \
-    ccache cmake autoconf automake gcc llvm swig \
+    ccache cmake autoconf automake gcc llvm libomp swig \
     openssh wget vim nedit git poppler htop trash-cli
 
   brew cask install \

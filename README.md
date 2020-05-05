@@ -56,8 +56,8 @@
 #######################################################################################
 # Create link between GitHub server and Visual Studio Code
 **Link to GitHub**
-
-- Create a link between your computer and GitHub server by first getting the RSA SSH key from the terminal by using **ssh_keygen**. When prompt, enter **nothing** to the questions. This will generate a key stored in the file **id_rsa** in **~/.ssh**. Copy the SSH key.
+- First, register the computer in Github. In GitHub website, under **User** --> **Settings** --> **SSH and GPG keys**, add the ssh key via **New SSH key**. Will need to do this for every computer to link to GitHub.
+- Getting the RSA SSH key from the computer (MacOS/Linux) terminal by using **ssh_keygen**. When prompt, enter **nothing** to the questions. This will generate a key stored in the file **id_rsa** in **~/.ssh**. Copy the SSH key to GitHub. Once done, GitHub will recognize the computer.
 ```
 > ssh-keygen
 
@@ -85,7 +85,7 @@ The key's randomart image is:
 > cat ~/.ssh/id_rsa
 ssh-rsa FOW9TUQ2J09Jqp4t0u009UGQ0409QJA.... <username>@<localhost>
 ```
-- In GitHub website, under **User** --> **Settings** --> **SSH and GPG keys**, add the ssh key via **New SSH key**. Will need to do this for every computer to link to GitHub.
+
 
 > ---
 **Upload files to GitHub**
@@ -101,7 +101,7 @@ ssh-rsa FOW9TUQ2J09Jqp4t0u009UGQ0409QJA.... <username>@<localhost>
 > git pull origin master
 > code .
 ```
-- Once VSCode is open in the folder, via the **Source Control** tab (Ctrl+Shift+G), **Stage Change (+)** to single or all files, then **Commit** (Check mark), then in the _lower left corner_ click the _"cloud-looking thing"_ to upload changes made to the files to GitHub. After the first submit, the _"cloud-looking thing"_ will change into a _"cycle-looking thing"_.
+- Once VSCode is open from inside the directory with the soon-to-be-uploaded codes, via the **Source Control** tab (Ctrl+Shift+G), **Stage Change (+)** to single or all files, then **Commit** (Check mark), then in the _lower left corner_ click the _"cloud-looking thing"_ to upload changes made to the files to GitHub. After the first submit, the _"cloud-looking thing"_ will change into a _"cycle-looking thing"_.
 
 #######################################################################################
 - **Simple scripts**
