@@ -108,25 +108,26 @@ if ($argv[1] == 'python') then
   python-dev libjbig-dev libjpeg-dev libjpeg8-dev libpng3 libpng-dev \
   libfreetype6-dev zlib1g-dev libtiffxx5 libtiff5-dev tables \
   python-rpy2 python-dbus python3-dbus python-pyqt5
- 
+
   # will have to run these install/upgrade manually by copy/paste the list
   # 'cairosvg' is python3 only
   set pip_list = "\
 virtualenv numpy scipy matplotlib pandas seaborn setuptools testresources\
-scikit-learn scikit-misc sklearn-pandas ipython jupyter \
-openpyxl xlwt XlsxWriter plotnine plotly openbabel \
+scikit-learn scikit-image scikit-misc sklearn-pandas ipython jupyter \
+openpyxl xlwt XlsxWriter plotnine plotly openbabel griddataformats \
 pathos statsmodels weblogo ContactVis \
 Pillow tqdm freesasa cairosvg spacy \
-cython mdtraj chembl_webresource_client biopython povme"
+cython mdtraj chembl_webresource_client biopython povme pandarallel"
 
   set conda_regular = "\
 numpy scipy matplotlib pandas scikit-learn ipython jupyter openpyxl xlwt \
 XlsxWriter pillow boost tqdm cairo cython curl "
 
   set conda_forge = ['conda-forge pathos rdkit plotnine jpype1 cairosvg',\
-  'conda-forge spacy beautifulsoup4 libxml2 lxml dicttoxml xmltodict', \
+  'scikit-image libxml2 lxml dicttoxml xmltodict griddataformats', \
+#  'conda-forge spacy beautifulsoup4', \
   'conda-forge freeglut xorg-libx11 tabulate biopython zlib',\
-  'conda-forge mdtraj mdanalysis', \
+  'conda-forge mdtraj mdanalysis dask-ml dask swifter', \
   'r rpy2 r-xml2', 'psi4 psi4 resp', \
   'openbabel openbabel', 'chembl chembl_webresource_client', \
   'mmcauliffe pyqt5 qt5', 'samoturk pymol', 'hydroid freesasa', \

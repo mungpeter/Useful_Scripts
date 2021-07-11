@@ -6,9 +6,8 @@
 #
 #  v1.   19.12.27
 #
-#  Do very simple line plot for one data file or multiple data files with
-#  same file extension. Data is averaged using a moving window of variable
-#  size, depending on the size of the data available
+#  Do very simple histogram for one data file or multiple data files with
+#  same file extension.
 #
 ##########################################################################
 
@@ -23,7 +22,6 @@ msg = '''\n\t> {0}
 \t-t < >     [ Name for title  (Def: None) ]
 \t-l <+>     [ Set (bottom top) y-limits (Def: None) ]
 \t-s         [ Running in Serial (Def: False) ]
-\t-m         [ Adaptive moving-window averaging (Def: False) ]
 \t-img < >   [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
 \t-dpi < >   [ Figure quality (Def: 150) ]\n
 e.g.> *.py  -a '.txt'
@@ -38,9 +36,10 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+sns.set(color_codes=True)
 matplotlib.use('Agg')   # to get around Xwindows when over 'ssh'
 
-import multiprocessing
+from pathos import multiprocessing
 from argparse import ArgumentParser
 
 ################################################
@@ -90,7 +89,6 @@ def main():
     title = False
 
   serial = args.serial
-  mv_avg = args.mv_avg
   if args.img:
     img = args.img
   else:
@@ -100,12 +98,11 @@ def main():
   else:
     dpi = 150
 
-
   if ext:
     file_list = glob.glob('*'+ext)
     if not file_list: sys.exit('\033[31m  ERROR:\0330m No file matches Extension\n')
-    snsp = plot_fig(ext=ext, sep=delimiter, mv_avg=mv_avg,
-                    x_name=x_name, y_name=y_name, title=title, y_lim=y_lim)
+    snsp = plot_fig(ext=ext, sep=delimiter, img=img, dpi=dpi,
+                    x_name=x_name, y_name=y_name, title=title, y_lim=y_lim,)
 
     if not serial:
       mpi = multiprocessing.Pool(processes=len(file_list))
@@ -118,33 +115,26 @@ def main():
   else:
     if not infile: sys.exit('\033[31m  ERROR:\033[0m No input file\n')
     ext = infile.split('.')[-1]
-    snsp = plot_fig(ext='.'+ext, sep=delimiter, mv_avg=mv_avg,
-                    x_name=x_name, y_name=y_name, title=title, y_lim=y_lim,
-                    img=img, dpi=dpi)
+    snsp = plot_fig(ext='.'+ext, sep=delimiter, 
+                    x_name=x_name, y_name=y_name, title=title, y_lim=y_lim)
     snsp(infile)
 
 
+
 ###########################################################################
 ###########################################################################
 
-def running_avg(x, N):
-  cumsum = np.cumsum(np.insert(x, 0.0, 0.0))
-  return (cumsum[N:] - cumsum[:-N])/ float(N)
-
-
-####################
 class plot_fig(object):
   def __init__( self, sep='', ext='', x_name='', y_name='', title='', y_lim='',
-                      mv_avg='', img='', dpi='' ):
+                      img='', dpi='' ):
     self.ext = ext
     self.sep = sep
     self.title = title
     self.x_name = x_name
     self.y_name = y_name
-    self.mv_avg = mv_avg
     self.y_lim  = y_lim
-    self.img    = img
     self.dpi    = dpi
+    self.img    = img
 
   def __call__(self, inp):
     return self.sns_plot(inp)
@@ -159,39 +149,16 @@ class plot_fig(object):
     if not self.x_name: self.x_name = names[0]
     if not self.y_name: self.y_name = names[1]
 
-    ## do adaptive moving window averaging
-    if self.mv_avg:
-      y = data[data.columns[1]]
-
-      if len(data) <= 50:
-        N = 5
-      elif len(data) <= 100:
-        N = 10
-      elif len(data) <= 500:
-        N = 25
-      elif len(data) <= 1000:
-        N = 50
-      else:
-        N = 100
-
-      y1 = y.rolling(window=N).median().iloc[N-1:].values
-      y2 = pd.DataFrame(y1, columns=[data.columns[1]])
-
-      data2 = pd.concat([ data[data.columns[0]], y2  ], axis=1)
-      data  = data2
-
-
-    sns.set(rc={"lines.linewidth": 0.33})
-    ax = sns.lineplot(x=data.columns[0], y=data.columns[1], data=data,
-                      ci='sd', err_style='band')
+    sns.set(rc={"lines.linewidth": 1.0})
+    ax = sns.distplot(data.iloc[:,1])
     ax.set(xlabel=self.x_name, ylabel=self.y_name)
     if self.title: ax.set_title(self.title)
     if self.y_lim is not None: ax.set(ylim=self.y_lim)
 
-    plt.savefig('{0}.{1}'.format(fname, self.img), figsize=(8,6),
-                    format=self.img, dpi=self.dpi )
+    plt.savefig('{0}.histo.{1}'.format(fname, self.img), figsize=(8,6),
+                      format=self.img, dpi=self.dpi)
     plt.clf()
-
+    
 
 ######################################################################
 def UserInput():
@@ -218,8 +185,6 @@ def UserInput():
 
   p.add_argument('-s', dest='serial', action='store_true',
                   help='Running in Serial (Def: False)')
-  p.add_argument('-m', dest='mv_avg', action='store_true',
-                  help='Adaptive moving-window averaging (Def: False)')
 
   args=p.parse_args()
   return args

@@ -40,7 +40,7 @@ import matplotlib.pyplot as plt
 sns.set(color_codes=True)
 matplotlib.use('Agg')   # to get around Xwindows when over 'ssh'
 
-from pathos import multiprocessing
+import multiprocessing
 from argparse import ArgumentParser
 
 ################################################

@@ -24,7 +24,8 @@ if ($argv[1] == 'build') then
   brew install \
     cask bzip2 zlib python \
     ccache cmake autoconf automake gcc llvm libomp swig \
-    openssh wget vim nedit git poppler htop trash-cli
+    openssh wget vim nedit git poppler htop trash-cli   \
+    ffmpeg
 
   brew cask install \
     wkhtmltopdf adobe-acrobat-reader adobe-acrobat-pro
@@ -76,7 +77,7 @@ scikit-learn scikit-misc sklearn-pandas ipython jupyter \
 openpyxl xlwt XlsxWriter plotnine plotly openbabel \
 pathos statsmodels weblogo ContactVis \
 Pillow tqdm freesasa cairosvg  \
-cython mdtraj biopython"
+cython biopython pandarallel"
 
 # python 3.6-only chembl_webresource_client
 
@@ -84,10 +85,11 @@ cython mdtraj biopython"
 numpy scipy matplotlib seaborn pandas ipython jupyter openpyxl xlwt \
 XlsxWriter pillow boost tqdm cairo cython curl "
 
-  set conda_forge = ['conda-forge pathos rdkit plotnine jpype1 cairosvg',\
-  'conda-forge libxml2 lxml dicttoxml xmltodict', \
+  set conda_forge = [ \
+  'conda-forge pathos rdkit plotnine jpype1 cairosvg',\
+  'conda-forge scikit-image libxml2 lxml dicttoxml xmltodict', \
   'conda-forge xorg-libx11 tabulate biopython zlib',\
-  'conda-forge mdtraj mdanalysis',
+  'conda-forge mdtraj mdanalysis dask-ml dask swifter',
   'anaconda scikit-learn'] #
   #'r rpy2 r-xml2', 'psi4 psi4 resp', \
   #'openbabel openbabel', 'chembl chembl_webresource_client', \
