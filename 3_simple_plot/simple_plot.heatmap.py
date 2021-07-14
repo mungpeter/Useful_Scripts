@@ -70,7 +70,7 @@ def main():
   ## collect and clean up input data
   data = CollectData(args.infile, args.sep, args.noheader, args.comment, cols)
 
-  # extract input residue dihedral angles and generate figure settings
+  # convert 2D data into histogram and generate figure settings
   fig_obj = FigureData( data, bins, fraction, smooth, t_step, c_step )
 
   # generate figure
