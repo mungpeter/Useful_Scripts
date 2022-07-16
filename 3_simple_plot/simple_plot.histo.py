@@ -5,7 +5,7 @@
 #  Peter MU Ung @ MSSM/Yale
 #
 #  v1.	19.12.27
-#  v2	21.06.25  update to use Histogram function
+#  v2	  21.06.25  update to use Histogram function
 #
 #  Do very simple histogram for one data file or multiple data files with
 #  same file extension.
@@ -27,13 +27,14 @@ msg = '''\n\t> {0}
 \t-l <+>     [ Set (bottom top) y-limits (Def: None) ]
 \t-bin < >   [ Bin number      (Def: auto) ]
 \t-img < >   [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
+\t-siz <+>   [ Figure x/y dimension in inch (Def: 8 6) ]
 \t-dpi < >   [ Figure quality (Def: 150) ]\n
 e.g.> *.py  -a '.txt'
   or
     > *.py  -f data.txt -s\n'''.format(sys.argv[0])
 if len(sys.argv) == 1: sys.exit(msg)
 
-import re,glob
+import glob
 import matplotlib
 import numpy as np
 import pandas as pd
@@ -57,15 +58,20 @@ def main():
     print('-l', y_lim)
   else:
     y_lim = None
+  if args.size:
+    size  = np.array(args.size, dtype=np.float32)
+  else:
+    size  = args.size
 
-
+###################################
 
   if args.ext:
     file_list = glob.glob('*'+args.ext)
     if not file_list: sys.exit('\033[31m  ERROR:\0330m No file matches Extension\n')
-    snsp = plot_fig(ext=args.ext, col=int(args.col), sep=args.delimiter, 
+    snsp = plot_fig(ext=args.ext, col=int(args.col), sep=args.sep, size=size,
                     img=args.img, dpi=int(args.dpi), bins=int(args.bins), norm=args.norm,
-                    x_name=args.x_name, y_name=args.y_name, title=args.title, y_lim=y_lim,)
+                    x_name=args.x_name, y_name=args.y_name, title=args.title, y_lim=y_lim,
+                    linewidth=linewidth)
 
     if not args.serial:
       mpi = multiprocessing.Pool(processes=len(file_list))
@@ -78,8 +84,8 @@ def main():
   else:
     if not args.infile: sys.exit('\033[31m  ERROR:\033[0m No input file\n')
     ext = args.infile.split('.')[-1]
-    snsp = plot_fig(ext='.'+ext, col=int(args.col), sep=args.delimiter, img=args.img,
-                    bins=int(args.bins), norm=args.norm,
+    snsp = plot_fig(ext='.'+ext, col=int(args.col), sep=args.sep, img=args.img,
+                    bins=int(args.bins), norm=args.norm, size=size, linewidth=args.linewidth,
                     x_name=args.x_name, y_name=args.y_name, title=args.title, y_lim=y_lim)
     snsp(args.infile)
 
@@ -90,7 +96,8 @@ def main():
 
 class plot_fig(object):
   def __init__( self, sep='', ext='', x_name='', y_name='', title='', y_lim='',
-                      norm=0,bins='',col=1,  img='png', dpi=150 ):
+                      norm=0, bins='',col=1,  img='png', dpi=150, size=(), 
+                      linewidth=''):
     self.ext = ext
     self.sep = sep
     self.col = col
@@ -102,6 +109,8 @@ class plot_fig(object):
     self.y_lim  = y_lim
     self.dpi    = dpi
     self.img    = img
+    self.size   = size
+    self.linewidth = linewidth
 
   def __call__(self, infile):
     return self.sns_plot(infile)
@@ -117,7 +126,10 @@ class plot_fig(object):
     if not self.x_name: self.x_name = names[0]
     if not self.y_name: self.y_name = names[1]
 
-    sns.set(rc={"lines.linewidth": 1.0})
+    sns.set(rc={"lines.linewidth": float(self.linewidth)})
+    fig, ax = plt.subplots()
+    fig.set_size_inches(tuple(self.size))
+
     if self.bins:
       if self.norm:
         ax = sns.histplot(data.iloc[:,self.col-1], bins=self.bins, stat='probability')
@@ -131,9 +143,9 @@ class plot_fig(object):
 
     ax.set(xlabel=self.x_name, ylabel=self.y_name)
     if self.title: ax.set_title(self.title)
-    if self.y_lim is not None: ax.set(ylim=self.y_lim)
+    if self.y_lim is not None: ax.set(ylim=tuple(self.y_lim))
 
-    plt.savefig('{0}.histo.{1}'.format(fname, self.img), figsize=(8,6),
+    plt.savefig('{0}.histo.{1}'.format(fname, self.img),
                       format=self.img, dpi=self.dpi)
     plt.clf()
     
@@ -147,7 +159,7 @@ def UserInput():
   p.add_argument('-f', dest='infile', required=False, default=False,
                   help='Plot for one data file (e.g.: filename.txt.bz2)')
 
-  p.add_argument('-d', dest='delimiter', required=False, default='\s+',
+  p.add_argument('-d', dest='sep', required=False, default='\s+',
                   help='delimiter       (Def: "\s+")')
   p.add_argument('-c', dest='col', required=False, default=1,
                   help='Column to be analyzed (Def: 1)')
@@ -165,6 +177,8 @@ def UserInput():
                   help='Figure format: png|jpg|svg|eps|pdf (Def: png)')
   p.add_argument('-dpi', dest='dpi', required=False, default=150,
                   help='Figure quality  (Def: 150)')
+  p.add_argument('-siz', dest='size', required=False, nargs='+', default=[8,6],
+                  help='Figure x/y dimensions in inch  (Def: 8 6)')
 
   p.add_argument('-s', dest='serial', action='store_true',
                   help='Running in Serial (Def: False)')

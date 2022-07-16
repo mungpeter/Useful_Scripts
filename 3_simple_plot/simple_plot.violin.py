@@ -22,7 +22,7 @@ msg = '''\n  > {0}
 \t-x < >    [ Name for x-axis (Def: Item) ]
 \t-y < >    [ Name for y-axis (Def: Distrib) ]
 \t-t < >    [ Name for title  (Def: None) ]
-\t-l <+>    [ Set (bottom top) y-limits (Def: None) ]
+\t-l <+>    [ Set [bottom top] y-limits (Def: None) ]
 \t-p        [ Use Plotnine plotting method (Def: Seaborn) ]
 \t-img < >  [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
 \t-siz <+>  [ Figure x/y dimension in inch (Def: 8 6) ]
@@ -77,7 +77,7 @@ def main():
     Quant = [.25,.5,.75]
 
     if y_lim is not None:
-      set_ylim = p9.ylim(y_lim)
+      set_ylim = p9.ylim(tuple(y_lim))
     else:
       set_ylim = p9.ylim([lg_df[args.y_name].min(),lg_df[args.y_name].max()])
 
@@ -99,15 +99,18 @@ def main():
     import seaborn as sns
     sns.set(style='whitegrid')
 
+    fig, ax = plt.subplots()
+    fig.set_size_inches(tuple(size))
+
     ax = sns.violinplot(x=args.x_name, y=args.y_name, data=lg_df,
                         linewidth=1, inner='box')
     if args.title:
       ax.set_title(args.title)
     if y_lim is not None:
-      ax.set(ylim=y_lim)
+      ax.set(ylim=tuple(y_lim))
 
     plt.savefig('{0}.violin.{1}'.format(args.outpref, args.img), 
-                figsize=tuple(size), format=args.img, dpi=int(args.dpi))
+                format=args.img, dpi=int(args.dpi))
     plt.clf()
 
 
@@ -133,7 +136,7 @@ def UserInput():
   p.add_argument('-t', dest='title', required=False, default='',
                   help='Name for title  (Def: None)')
   p.add_argument('-l', dest='y_lim', required=False, nargs="+", default=None,
-                  help='Set (bottom top) y-limits (Def: None)')
+                  help='Set [bottom top] y-limits (Def: None)')
   p.add_argument('-img', dest='img', required=False, default='png',
                   help='Figure format: png|jpg|svg|eps|pdf (Def: png)')
   p.add_argument('-siz', dest='size', required=False, nargs='+', default=[8,6],
