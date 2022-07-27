@@ -2,7 +2,7 @@
 
 ##########################################################################
 #
-#  Peter MU Ung @ MSSM/Yale
+#  Peter MU Ung @ MSSM/Yale/gRED
 #
 #  v1.	19.12.27
 #  v2	  21.06.25  update to use Histogram function
@@ -14,21 +14,25 @@
 
 import sys
 msg = '''\n\t> {0}
-\t-a < >     [ Plot for all data files with Extension (e.g.: .txt) ]
-\t-f < >     [ Plot for one data file (e.g.: filename.txt.bz2)     ]
-\tOptional:
-\t-s         [ Running in Serial (Def: False ]
-\t-norm      [ Normalize data  (Def: False) ]
-\t-d < >     [ Delimiter       (Def:"\s+") ]
-\t-c < >     [ Column to be analyzed (Def: 1) ]
-\t-x < >     [ Name for x-axis (Def: None) ]
-\t-y < >     [ Name for y-axis (Def: None) ]
-\t-t < >     [ Name for title  (Def: None) ]
-\t-l <+>     [ Set (bottom top) y-limits (Def: None) ]
-\t-bin < >   [ Bin number      (Def: auto) ]
-\t-img < >   [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
-\t-siz <+>   [ Figure x/y dimension in inch (Def: 8 6) ]
-\t-dpi < >   [ Figure quality (Def: 150) ]\n
+    -a < >     [ Plot for all data files with Extension (e.g.: .txt) ]
+    -f < >     [ Plot for one data file (e.g.: filename.txt.bz2)     ]
+  Optional:
+    -s         [ Running in Serial (Def: False ]
+    -norm      [ Normalize data  (Def: False) ]
+    -d < >     [ Delimiter       (Def:"\s+") ]
+    -c < >     [ Column to be analyzed (Def: 1) ]
+    -x < >     [ Name for x-axis (Def: None) ]
+    -y < >     [ Name for y-axis (Def: None) ]
+    -t < >     [ Name for title  (Def: None) ]
+    -l <+>     [ Set (bottom top) y-limits (Def: None) ]
+    -bin < >   [ Bin number      (Def: auto) ]
+    -w   < >   [ Line width (Def: 1.0) ]
+    -ver <+>   [ Add vertical line(s), x = input (def: None) ]
+    -hor <+>   [ Add horizontal line(s), y = input (def: None) ]
+    -col < >   [ Vertical/Horizontal line color (def="red") ]
+    -img < >   [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
+    -siz <+>   [ Figure x/y dimension in inch (Def: 8 6) ]
+    -dpi < >   [ Figure quality (Def: 150) ]\n
 e.g.> *.py  -a '.txt'
   or
     > *.py  -f data.txt -s\n'''.format(sys.argv[0])
@@ -71,7 +75,8 @@ def main():
     snsp = plot_fig(ext=args.ext, col=int(args.col), sep=args.sep, size=size,
                     img=args.img, dpi=int(args.dpi), bins=int(args.bins), norm=args.norm,
                     x_name=args.x_name, y_name=args.y_name, title=args.title, y_lim=y_lim,
-                    linewidth=linewidth)
+                    linewidth=args.linewidth, vlines=args.vlines, hlines=args.hlines, 
+                    refcolr=args.refcolr)
 
     if not args.serial:
       mpi = multiprocessing.Pool(processes=len(file_list))
@@ -86,7 +91,8 @@ def main():
     ext = args.infile.split('.')[-1]
     snsp = plot_fig(ext='.'+ext, col=int(args.col), sep=args.sep, img=args.img,
                     bins=int(args.bins), norm=args.norm, size=size, linewidth=args.linewidth,
-                    x_name=args.x_name, y_name=args.y_name, title=args.title, y_lim=y_lim)
+                    x_name=args.x_name, y_name=args.y_name, title=args.title, y_lim=y_lim,
+                    vlines=args.vlines, hlines=args.hlines, refcolr=args.refcolr)
     snsp(args.infile)
 
 
@@ -97,7 +103,7 @@ def main():
 class plot_fig(object):
   def __init__( self, sep='', ext='', x_name='', y_name='', title='', y_lim='',
                       norm=0, bins='',col=1,  img='png', dpi=150, size=(), 
-                      linewidth=''):
+                      linewidth='', vlines=[], hlines=[], refcolr=''):
     self.ext = ext
     self.sep = sep
     self.col = col
@@ -107,6 +113,9 @@ class plot_fig(object):
     self.x_name = x_name
     self.y_name = y_name
     self.y_lim  = y_lim
+    self.vlines = vlines
+    self.hlines = hlines
+    self.refcolr= refcolr
     self.dpi    = dpi
     self.img    = img
     self.size   = size
@@ -141,6 +150,15 @@ class plot_fig(object):
       else:
         ax = sns.histplot(data.iloc[:,self.col-1])
 
+    ## Add custom vertical/horizontal lines
+    if self.vlines:
+      for v in self.vlines:
+        ax.refline(x=float(v), color=self.refcolr, lw=float(self.linewidth))
+    if self.hlines:
+      for h in self.hlines:
+        ax.refline(y=float(h), color=self.refcolr, lw=float(self.linewidth))
+
+    ## Adjust labels, titles, max_y-axis
     ax.set(xlabel=self.x_name, ylabel=self.y_name)
     if self.title: ax.set_title(self.title)
     if self.y_lim is not None: ax.set(ylim=tuple(self.y_lim))
@@ -173,6 +191,16 @@ def UserInput():
                   help='Set (bottom top) y-limits (Def: None)')
   p.add_argument('-bin',dest='bins', required=False, default=None,
                   help='Bin number (Def: auto)')
+
+  p.add_argument('-w', dest='linewidth', required=False, default=1.0,
+                  help='Line width (Def: 1.0)')
+  p.add_argument('-ver', dest='vlines', required=False, nargs='+', default=[],
+                  help='Add vertical line(s), x = input (Def: None)')
+  p.add_argument('-hor', dest='hlines', required=False, nargs='+', default=[],
+                  help='Add horizontal line(s), y = input (Def: None)')
+  p.add_argument('-col', dest='refcolr',required=False, default='red',
+                  help='Vertical/Horizontal line color (def="red")')
+
   p.add_argument('-img', dest='img', required=False, default='png',
                   help='Figure format: png|jpg|svg|eps|pdf (Def: png)')
   p.add_argument('-dpi', dest='dpi', required=False, default=150,

@@ -2,7 +2,7 @@
 
 ##########################################################################
 #
-#  Peter MU Ung @ MSSM/Yale
+#  Peter MU Ung @ MSSM/Yale/gRED
 #
 #  v1.   19.12.27
 #  v2    22.07.15 @ gRED allow plotting multiple lines at once
@@ -15,25 +15,29 @@
 
 import sys
 msg = '''\n\t> {0}
-\t-a < >     [ Plot for all data files with Extension (e.g.: .txt)  ]
-\t-i <+>     [ Plot for one/more data file (e.g.: filename.txt.bz2) ]
-\t-o < >     [ Ouptut plot prefix ]
-\tOptional:
-\t-n <+>     [ Custom Colnames matching data file order (e.g.: x_id y_id z_id) ]
-\t-d < >     [ Delimiter       (Def:"\s+") ]
-\t-x < >     [ Name for x-axis (Def: None) ]
-\t-y < >     [ Name for y-axis (Def: None) ]
-\t-t < >     [ Name for title  (Def: None) ]
-\t-l <+>     [ Set (bottom top) y-limits (Def: None) ]
-\t-s         [ Running in Serial (Def: False) ]
-\t-m         [ Adaptive moving-window smoothing (Def: False) ]
-\t-w < >     [ Linewidth (Def: 1.0) ]
-\t-img < >   [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
-\t-siz <+>   [ Figure x/y dimension in inch (Def: 8 6) ]
-\t-dpi < >   [ Figure quality (Def: 150) ]\n
+    -a < >     [ Plot for all data files with Extension (e.g.: .txt)  ]
+    -i <+>     [ Plot for one/more data file (e.g.: filename.txt.bz2) ]
+    -o < >     [ Ouptut plot prefix ]
+  Optional:
+    -n <+>     [ Custom Colnames matching data file order (e.g.: x_id y_id z_id) ]
+    -d < >     [ Delimiter       (Def:"\s+") ]
+    -x < >     [ Name for x-axis (Def: None) ]
+    -y < >     [ Name for y-axis (Def: None) ]
+    -t < >     [ Name for title  (Def: None) ]
+    -l <+>     [ Set (bottom top) y-limits (Def: None) ]
+    -s         [ Running in Serial (Def: False) ]
+    -m         [ Adaptive moving-window smoothing (Def: False) ]
+    -w < >     [ Linewidth (Def: 1.0) ]
+    -ver <+>   [ Add vertical line(s), x = input (def: None) ]
+    -hor <+>   [ Add horizontal line(s), y = input (def: None) ]
+    -col < >   [ Vertical/Horizontal line color (def="red") ]
+    -rot < >   [ Rotate x-tick label by degree (Def: 0 | 33 is good) ]
+    -img < >   [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
+    -siz <+>   [ Figure x/y dimension in inch (Def: 8 6) ]
+    -dpi < >   [ Figure quality (Def: 150) ]\n
 e.g.> *.py  -a '.txt'
   or
-    > *.py  -f data.txt -s\n'''.format(sys.argv[0])
+    > *.py  -i data.txt -s -m\n'''.format(sys.argv[0])
 if len(sys.argv) == 1: sys.exit(msg)
 
 import glob
@@ -72,7 +76,8 @@ def main():
     if not file_list: sys.exit('\033[31m  ERROR:\0330m No file matches Extension\n')
     snsp = plot_fig(ext=args.ext, sep=args.sep, mv_avg=args.mv_avg,
                     x_name=args.x_name, y_name=args.y_name, column=args.col,
-                    title=args.title, y_lim=y_lim, size=size, linewidth=args.linewidth)
+                    title=args.title, y_lim=y_lim, size=size, linewidth=args.linewidth,
+                    rotate=args.rotate)
 
     if not args.serial:
       mpi = multiprocessing.Pool(processes=len(file_list))
@@ -88,7 +93,9 @@ def main():
     snsp = plot_fig(sep=args.sep, mv_avg=args.mv_avg,
                     x_name=args.x_name, y_name=args.y_name, title=args.title,
                     col_names=args.col_names, y_lim=y_lim, linewidth=args.linewidth,
-                    img=args.img, dpi=args.dpi, size=size, outpref=args.outpref )
+                    img=args.img, dpi=args.dpi, size=size, outpref=args.outpref 
+                    rotate=args.rotate, vlines=args.vlines, hlines=args.hlines,
+                    refcolr=args.refcolr )
     snsp(args.infile)
 
 
@@ -97,7 +104,8 @@ def main():
 class plot_fig(object):
   def __init__( self, sep='', ext='', x_name='', y_name='', title='', y_lim='',
                       col=0, col_names=[], mv_avg='', img='', dpi='', size='',
-                      linewidth='', outpref='' ):
+                      linewidth='', rotate=0, outpref='', vlines=[], hlines=[],
+                      refcolr='red' ):
     self.ext = ext
     self.sep = sep
     self.col = col
@@ -107,9 +115,13 @@ class plot_fig(object):
     self.col_names = col_names
     self.mv_avg = mv_avg
     self.y_lim  = y_lim
+    self.vlines = vlines
+    self.hlines = hlines
+    self.refcolr= refcolr
     self.img    = img
     self.dpi    = dpi
     self.size   = size
+    self.rotate = rotate
     self.linewidth = linewidth
     self.outpref = outpref
 
@@ -149,11 +161,22 @@ class plot_fig(object):
     fig.set_size_inches(tuple(self.size))
 
     ax = sns.lineplot(data=xdf, ci='sd', err_style='band')
+
+    ## Add custom vertical/horizontal lines
+    if self.vlines:
+      for v in self.vlines:
+        ax.refline(x=float(v), color=self.refcolr, lw=float(self.linewidth))
+    if self.hlines:
+      for h in self.hlines:
+        ax.refline(y=float(h), color=self.refcolr, lw=float(self.linewidth))
+
+    ## Adjust labels, titles, max_y-axis
     ax.set(xlabel=self.x_name, ylabel=self.y_name)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=int(self.rotate))
     if self.title: ax.set_title(self.title)
     if self.y_lim is not None: ax.set(ylim=tuple(self.y_lim))
 
-    plt.savefig('{0}.{1}'.format(self.outpref, self.img),
+    plt.savefig('{0}.{1}.{2}'.format(self.outpref, 'line', self.img),
                     format=self.img, dpi=int(self.dpi) )
     plt.clf()
 
@@ -204,8 +227,18 @@ def UserInput():
                   help='Name for title  (Def: "")')
   p.add_argument('-l', dest='y_lim', required=False, nargs="+", default=None,
                   help='Set (bottom top) y-limits (Def: None)')
+
   p.add_argument('-w', dest='linewidth', required=False, default=1.0,
                   help='Line width (Def: 1.0)')
+  p.add_argument('-ver', dest='vlines', required=False, nargs='+', default=[],
+                  help='Add vertical line(s), x = input (Def: None)')
+  p.add_argument('-hor', dest='hlines', required=False, nargs='+', default=[],
+                  help='Add horizontal line(s), y = input (Def: None)')
+  p.add_argument('-col', dest='refcolr',required=False, default='red',
+                  help='Vertical/Horizontal line color (def="red")')
+
+  p.add_argument('-rot', dest='rotate', required=False, default=0,
+                  help='Rotate x-tick label by degree (Def: 0 | 33 is good)')
   p.add_argument('-img', dest='img', required=False, default='png',
                   help='Figure format: png|jpg|svg|eps|pdf (Def: png)')
   p.add_argument('-dpi', dest='dpi', required=False, default=150,

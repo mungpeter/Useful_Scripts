@@ -30,6 +30,10 @@ msg = '''\n  > {0}
     -c_step < >  [ Histo Contour spacing per histogram digits unit (Def: 4) ]\n
     -xlim <+> [ X-axis lower and upper limits (Def: None) ]
     -ylim <+> [ Y-axis lower and upper limits (Def: None) ]
+    -w    < > [ Line width (Def: 1.0) ]
+    -ver  <+> [ Add vertical line(s), x = input (def: None) ]
+    -hor  <+> [ Add horizontal line(s), y = input (def: None) ]
+    -col  < > [ Vertical/Horizontal line color (def="red") ]
     -tick < > [ Number of ticks on X/Y-axes, auto=6 (Def: auto) ] * need xlim/ylim
     -xlab < > [ Name for X-axis (Def: Item_1) ]
     -ylab < > [ Name for Y-axis (Def: Item_2) ]
@@ -55,13 +59,6 @@ mpl.use('Agg')   # to get around Xwindows when over 'ssh'
 def main():
 
   args = UserInput()
-  dpi    = int(args.dpi)
-  bins   = int(args.bins)
-  ticks  = int(args.ticks)
-  smooth = float(args.smooth)
-  t_step = float(args.t_step)
-  c_step = float(args.c_step)
-  fraction = float(args.fraction)
   cols   = np.array(list(map(int, args.cols)))-1  ## data columns to extract
   xlim   = list(map(float, args.xlim)) if args.xlim else False
   ylim   = list(map(float, args.ylim)) if args.ylim else False
@@ -71,10 +68,11 @@ def main():
   data = CollectData(args.infile, args.sep, args.noheader, args.comment, cols)
 
   # convert 2D data into histogram and generate figure settings
-  fig_obj = FigureData( data, bins, fraction, smooth, t_step, c_step )
+  fig_obj = FigureData( data, args.bins, args.fraction, args.smooth, args.t_step, args.c_step )
 
   # generate figure
-  GenerateImage( fig_obj, xlim, ylim, ticks, args.xlabel, args.ylabel, args.img_name, size, dpi )
+  GenerateImage( fig_obj, xlim, ylim, args.ticks, args.xlabel, args.ylabel, args.img_name,
+                 size, args.dpi, args.linewidth, args.vlines, args.hlines, args.refcolr )
 
 
 ############################################################################
@@ -106,14 +104,14 @@ def FigureData( data, bins, fraction, smooth, t_step, c_step ):
 
   # Generate normalized 2D histogram (array of array)
   Histo, x_bins, y_bins = np.histogram2d(data[0], data[1], 
-                                bins=(bins+1,bins+1), density=True)
+                                bins=(int(bins)+1,int(bins)+1), density=True)
 
   xbin_step = abs(x_bins[0] - x_bins[1])
   ybin_step = abs(y_bins[0] - y_bins[1])
 
   # Smoothening the 2D histogram data
-  Sigma = [ (max(x_bins)-min(x_bins)) * smooth/len(x_bins),
-            (max(y_bins)-min(y_bins)) * smooth/len(y_bins) ]
+  Sigma = [ (max(x_bins)-min(x_bins)) * float(smooth)/len(x_bins),
+            (max(y_bins)-min(y_bins)) * float(smooth)/len(y_bins) ]
   smooth_hist = ndimage.filters.gaussian_filter(Histo, sigma=Sigma)
 
   # get scientific notation, then set the cutoff to a fraction of maximum
@@ -129,13 +127,13 @@ def FigureData( data, bins, fraction, smooth, t_step, c_step ):
     num_format = '%.2f'
 
   # introduce a cutoff to histogram data
-  histo2d = smooth_hist - (h_max*(1-fraction))
+  histo2d = smooth_hist - (h_max*(1-float(fraction)))
 
   # side bar tick, maximum = histogram value
-  cbar_ticks = np.linspace( 0, h_max, num=int(digits*t_step)+1 )
+  cbar_ticks = np.linspace( 0, h_max, num=int(digits*float(t_step))+1 )
 
   # Contour levels, set to be 'c_step' of the histo value, default is 4x
-  levels = np.linspace( 0, h_max, num=int(digits*c_step)+1 )
+  levels = np.linspace( 0, h_max, num=int(digits*float(c_step))+1 )
 
   # X- and Y-axes min and max, will be stretch to be equal
   extent = [  x_bins[0] - xbin_step, x_bins[-1]+ xbin_step,
@@ -146,7 +144,7 @@ def FigureData( data, bins, fraction, smooth, t_step, c_step ):
   fig_obj = ImageData( histo2d=histo2d )
   fig_obj.levels = levels
   fig_obj.extent = extent
-  fig_obj.bins   = bins
+  fig_obj.bins   = int(bins)
   fig_obj.format = num_format
   fig_obj.im_extent = extent
   fig_obj.im_colors = mpl.colors.ListedColormap(['#FFFFFF'])
@@ -157,7 +155,8 @@ def FigureData( data, bins, fraction, smooth, t_step, c_step ):
 
 ############################################################################
 ## Generate Ramachandran heat map
-def GenerateImage( fig_obj, xlim, ylim, ticks, xlabel, ylabel, img_name, figsize, dpi ):
+def GenerateImage( fig_obj, xlim, ylim, ticks, xlabel, ylabel, img_name, 
+                   figsize, dpi, linewidth, vlines, hlines, refcolr ):
 
   plt.figure(2, figsize=figsize)
   colors = mpl.cm.jet
@@ -188,22 +187,29 @@ def GenerateImage( fig_obj, xlim, ylim, ticks, xlabel, ylabel, img_name, figsize
               extent=fig_obj.extent, levels=fig_obj.levels,
               origin='upper', colors='black', linewidths=0.67, alpha=0.4 )
 
+  ## Add custom vertical/horizontal lines
+  if vlines:
+    for v in list(map(float,vlines)):
+      plt.axvline(x=v, color=refcolr, lw=float(linewidth))
+  if hlines:
+    for h in list(map(float,hlines)):
+      plt.axhline(y=h, color=refcolr, lw=float(linewidth))
 
-  ## add additional items
+  ## Adjust labels, titles, max_y-axis
   plt.xticks(fontsize=14)
   plt.yticks(fontsize=14)
   if xlim:
     plt.xlim(xlim)
-    if ticks: plt.xticks(np.linspace(xlim[0], xlim[1], num=ticks), fontsize=14)
+    if ticks: plt.xticks(np.linspace(xlim[0], xlim[1], num=int(ticks)), fontsize=14)
   if ylim:
     plt.ylim(ylim)
-    if ticks: plt.yticks(np.linspace(ylim[0], ylim[1], num=ticks), fontsize=14)
+    if ticks: plt.yticks(np.linspace(ylim[0], ylim[1], num=int(ticks)), fontsize=14)
 
   plt.xlabel(xlabel, fontsize=14)
   plt.ylabel(ylabel, fontsize=14)
   plt.grid(True, linestyle='--', alpha=0.75)
 
-  plt.savefig(img_name, bbox_inches=0, dpi=dpi)
+  plt.savefig(img_name, bbox_inches=0, dpi=int(dpi))
 
 
 ############################################################################
@@ -247,6 +253,15 @@ def UserInput():
                   help='Colorbar tick spacing per Histogram digits value (def: 4)')
   p.add_argument('-c_step', dest='c_step', required=False, default=4,
                   help='Histogram Contour spacing per Histogram digits value (def: 4)')
+
+  p.add_argument('-w', dest='linewidth', required=False, default=1.0,
+                  help='Line width (Def: 1.0)')
+  p.add_argument('-ver', dest='vlines', required=False, nargs='+', default=[],
+                  help='Add vertical line(s), x = input (Def: None)')
+  p.add_argument('-hor', dest='hlines', required=False, nargs='+', default=[],
+                  help='Add horizontal line(s), y = input (Def: None)')
+  p.add_argument('-col', dest='refcolr',required=False, default='red',
+                  help='Vertical/Horizontal line color (def="red")')
 
   p.add_argument('-xlim', dest='xlim', required=False, nargs="+", default=False,
                   help='X-axis lower and upper limits (Def: None)')

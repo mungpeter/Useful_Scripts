@@ -13,20 +13,24 @@
 
 import sys
 msg = '''\n  > {0}
-\t-i <+>    [ Data file(s) ] # separated by space; 1 or 2 columns; only use last col
-\t-o < >    [ Output prefix ]
-\tOptional:
-\t-n <+>    [ Custom Colnames matching data file order (e.g.: x_id y_id z_id) ]
-\t-c < >    [ Column number in file(s) to be read (Def: last column) ]
-\t-d < >    [ Delimiter       (Def:'\s+') ]
-\t-x < >    [ Name for x-axis (Def: Item) ]
-\t-y < >    [ Name for y-axis (Def: Distrib) ]
-\t-t < >    [ Name for title  (Def: None) ]
-\t-l <+>    [ Set [bottom top] y-limits (Def: None) ]
-\t-p        [ Use Plotnine plotting method (Def: Seaborn) ]
-\t-img < >  [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
-\t-siz <+>  [ Figure x/y dimension in inch (Def: 8 6) ]
-\t-dpi < >  [ Figure quality (Def: 150) ]\n
+    -i <+>    [ Data file(s) ] # separated by space; 1 or 2 columns; only use last col
+    -o < >    [ Output prefix ]
+  Optional:
+    -n <+>    [ Custom Colnames matching data file order (e.g.: x_id y_id z_id) ]
+    -c < >    [ Column number in file(s) to be read (Def: last column) ]
+    -d < >    [ Delimiter       (Def:'\s+') ]
+    -x < >    [ Name for x-axis (Def: Item) ]
+    -y < >    [ Name for y-axis (Def: Distrib) ]
+    -t < >    [ Name for title  (Def: None)  ]
+    -w < >    [ Linewidth (Def: 1.0) ]
+    -rot < >  [ Rotate x-tick label by degree (Def: 0 | 33 is good) ]
+    -l <+>    [ Set [bottom top] y-limits (Def: None) ]
+    -p        [ Use Plotnine plotting method (Def: Seaborn) ]
+    -hor <+>  [ Add horizontal line(s), y = input (def: None) ]
+    -col < >  [ Vertical/Horizontal line color (def="red") ]
+    -img < >  [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
+    -siz <+>  [ Figure x/y dimension in inch (Def: 8 6) ]
+    -dpi < >  [ Figure quality (Def: 150) ]\n
 e.g.> *.py  -i x.txt y.txt z.txt    -o output\n'''.format(sys.argv[0])
 if len(sys.argv) == 1: sys.exit(msg)
 
@@ -87,8 +91,13 @@ def main():
       p9.ggtitle(args.title) + p9.theme_classic() + set_ylim +
       p9.scale_x_discrete(limits=args.col_names) +
       p9.theme( text = p9.element_text(size=12, color='black'), 
-          axis_text_x = p9.element_text(angle=33),
+          axis_text_x = p9.element_text(angle=int(args.rotate)),
           panel_grid_major_y = p9.element_line(color='gray', alpha=.5) ) ) 
+
+    if args.hlines:
+      for h in args.hlines:
+        df_plot = (df_plot + p9.geom_hline(yintercept=float(h), 
+                       color=args.refcolr, size=float(args.linewidth)))
 
     p9.ggsave(filename='{0}.violin.{1}'.format(args.outpref, args.img), 
               plot=df_plot, dpi=int(args.dpi), format=args.img,
@@ -103,7 +112,15 @@ def main():
     fig.set_size_inches(tuple(size))
 
     ax = sns.violinplot(x=args.x_name, y=args.y_name, data=lg_df,
-                        linewidth=1, inner='box')
+                        linewidth=float(args.linewidth), inner='box')
+
+    ## Add custom horizontal (only) lines
+    if args.hlines:
+      for h in args.hlines:
+        ax.refline(y=float(h), color=args.refcolr, lw=float(args.linewidth))
+
+    ## Adjust labels, titles, max_y-axis
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=int(args.rotate))
     if args.title:
       ax.set_title(args.title)
     if y_lim is not None:
@@ -135,8 +152,18 @@ def UserInput():
                   help='Name for y-axis (Def: Distrib)')
   p.add_argument('-t', dest='title', required=False, default='',
                   help='Name for title  (Def: None)')
+  p.add_argument('-rot', dest='rotate', required=False, default=0,
+                  help='Rotate x-tick label by degree (Def: 0 | 33 is good)')
   p.add_argument('-l', dest='y_lim', required=False, nargs="+", default=None,
                   help='Set [bottom top] y-limits (Def: None)')
+
+  p.add_argument('-w', dest='linewidth', required=False, default=1.0,
+                  help='Line width (Def: 1.0)')
+  p.add_argument('-hor', dest='hlines', required=False, nargs='+', default=[],
+                  help='Add horizontal line(s), y = input (Def: None)')
+  p.add_argument('-col', dest='refcolr',required=False, default='red',
+                  help='Vertical/Horizontal line color (def="red")')
+
   p.add_argument('-img', dest='img', required=False, default='png',
                   help='Figure format: png|jpg|svg|eps|pdf (Def: png)')
   p.add_argument('-siz', dest='size', required=False, nargs='+', default=[8,6],
