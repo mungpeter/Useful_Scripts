@@ -153,10 +153,10 @@ class plot_fig(object):
     ## Add custom vertical/horizontal lines
     if self.vlines:
       for v in self.vlines:
-        ax.refline(x=float(v), color=self.refcolr, lw=float(self.linewidth))
+        ax.axvline(x=float(v), color=self.refcolr, lw=float(self.linewidth))
     if self.hlines:
       for h in self.hlines:
-        ax.refline(y=float(h), color=self.refcolr, lw=float(self.linewidth))
+        ax.axhline(y=float(h), color=self.refcolr, lw=float(self.linewidth))
 
     ## Adjust labels, titles, max_y-axis
     ax.set(xlabel=self.x_name, ylabel=self.y_name)

@@ -27,7 +27,7 @@ msg = '''\n  > {0}
     -l <+>    [ Set [bottom top] y-limits (Def: None) ]
     -p        [ Use Plotnine plotting method (Def: Seaborn) ]
     -hor <+>  [ Add horizontal line(s), y = input (def: None) ]
-    -col < >  [ Vertical/Horizontal line color (def="red") ]
+    -col <+>  [ Vertical/Horizontal line color (def="red") ]
     -img < >  [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
     -siz <+>  [ Figure x/y dimension in inch (Def: 8 6) ]
     -dpi < >  [ Figure quality (Def: 150) ]\n
@@ -95,9 +95,9 @@ def main():
           panel_grid_major_y = p9.element_line(color='gray', alpha=.5) ) ) 
 
     if args.hlines:
-      for h in args.hlines:
+      for i, h in enumerate(args.hlines):
         df_plot = (df_plot + p9.geom_hline(yintercept=float(h), 
-                       color=args.refcolr, size=float(args.linewidth)))
+                       color=args.refcolr[i], size=float(args.linewidth)))
 
     p9.ggsave(filename='{0}.violin.{1}'.format(args.outpref, args.img), 
               plot=df_plot, dpi=int(args.dpi), format=args.img,
@@ -116,11 +116,11 @@ def main():
 
     ## Add custom horizontal (only) lines
     if args.hlines:
-      for h in args.hlines:
-        ax.refline(y=float(h), color=args.refcolr, lw=float(args.linewidth))
+      for i, h in enumerate(args.hlines):
+        ax.axhline(y=float(h), color=args.refcolr[i], lw=float(args.linewidth))
 
     ## Adjust labels, titles, max_y-axis
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=int(args.rotate))
+    ax.tick_params(axis='x', rotation=int(args.rotate))
     if args.title:
       ax.set_title(args.title)
     if y_lim is not None:
@@ -161,7 +161,7 @@ def UserInput():
                   help='Line width (Def: 1.0)')
   p.add_argument('-hor', dest='hlines', required=False, nargs='+', default=[],
                   help='Add horizontal line(s), y = input (Def: None)')
-  p.add_argument('-col', dest='refcolr',required=False, default='red',
+  p.add_argument('-col', dest='refcolr',required=False, default=['r'], nargs='+',
                   help='Vertical/Horizontal line color (def="red")')
 
   p.add_argument('-img', dest='img', required=False, default='png',

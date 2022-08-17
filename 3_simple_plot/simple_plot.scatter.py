@@ -26,7 +26,7 @@ msg = '''\n\t> {0}
     -w < >     [ Linewidth (Def: 1.0) ]
     -ver <+>   [ Add vertical line(s), x = input (def: None) ]
     -hor <+>   [ Add horizontal line(s), y = input (def: None) ]
-    -col < >   [ Vertical/Horizontal line color (def="red") ]
+    -col <+>   [ Vertical/Horizontal line color (def="red") ]
     -rot < >   [ Rotate x-tick label by degree (Def: 0 | 33 is good) ]
     -img < >   [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
     -siz <+>   [ Figure x/y dimension in inch (Def: 8 6) ]
@@ -159,15 +159,15 @@ class plot_fig(object):
 
     ## Add custom vertical/horizontal lines
     if self.vlines:
-      for v in self.vlines:
-        ax.refline(x=float(v), color=self.refcolr, lw=float(self.linewidth))
+      for i, v in enumerate(self.vlines):
+        ax.axvline(x=float(v), color=self.refcolr[i], lw=float(self.linewidth))
     if self.hlines:
-      for h in self.hlines:
-        ax.refline(y=float(h), color=self.refcolr, lw=float(self.linewidth))
+      for i, h in enumerate(self.hlines):
+        ax.axhline(y=float(h), color=self.refcolr[i], lw=float(self.linewidth))
 
     ## Adjust labels, titles, max_y-axis
     ax.set(xlabel=self.x_name, ylabel=self.y_name)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=int(args.rotate))
+    ax.tick_params(axis='x', rotation=int(self.rotate))
     if self.title: ax.set_title(self.title)
     if self.y_lim is not None: ax.set(ylim=self.y_lim)
 
@@ -201,7 +201,7 @@ def UserInput():
                   help='Add vertical line(s), x = input (Def: None)')
   p.add_argument('-hor', dest='hlines', required=False, nargs='+', default=[],
                   help='Add horizontal line(s), y = input (Def: None)')
-  p.add_argument('-col', dest='refcolr',required=False, default='red',
+  p.add_argument('-col', dest='refcolr',required=False, default=['r'], nargs='+',
                   help='Vertical/Horizontal line color (def="red")')
 
   p.add_argument('-rot', dest='rotate', required=False, default=0,
