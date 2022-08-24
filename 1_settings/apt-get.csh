@@ -123,11 +123,11 @@ cython mdtraj chembl_webresource_client biopython povme pandarallel"
 numpy scipy matplotlib pandas scikit-learn ipython jupyter openpyxl xlwt \
 XlsxWriter pillow boost tqdm cairo cython curl "
 
-  set conda_forge = ['conda-forge pathos rdkit plotnine jpype1 cairosvg',\
+  set conda_forge = ['conda-forge glib pathos rdkit plotnine jpype1 cairosvg',\
   'scikit-image libxml2 lxml dicttoxml xmltodict griddataformats', \
 #  'conda-forge spacy beautifulsoup4', \
   'conda-forge freeglut xorg-libx11 tabulate biopython zlib',\
-  'conda-forge mdtraj mdanalysis dask-ml dask swifter', \
+  'conda-forge mdtraj mdanalysis ambertools parmed dask-ml dask swifter', \
   'r rpy2 r-xml2', 'psi4 psi4 resp', \
   'openbabel openbabel', 'chembl chembl_webresource_client', \
   'mmcauliffe pyqt5 qt5', 'samoturk pymol', 'hydroid freesasa', \
