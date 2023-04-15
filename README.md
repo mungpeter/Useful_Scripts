@@ -82,7 +82,7 @@ The key's randomart image is:
 |    .oo  E. . .. |
 +----[SHA256]-----+
 
-> cat ~/.ssh/id_rsa
+> cat ~/.ssh/id_rsa.pub
 ssh-rsa FOW9TUQ2J09Jqp4t0u009UGQ0409QJA.... <username>@<localhost>
 ```
 

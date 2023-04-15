@@ -22,12 +22,14 @@ msg = '''\n  > {0}
     -x < >    [ Name for x-axis (Def: Item) ]
     -y < >    [ Name for y-axis (Def: Distrib) ]
     -t < >    [ Name for title  (Def: None)  ]
+    -v < >    [ Seaborn representation of datapoint, box|quartile|none (Def: box) ]
     -w < >    [ Linewidth (Def: 1.0) ]
     -rot < >  [ Rotate x-tick label by degree (Def: 0 | 33 is good) ]
     -l <+>    [ Set [bottom top] y-limits (Def: None) ]
-    -p        [ Use Plotnine plotting method (Def: Seaborn) ]
+    -p9       [ Use Plotnine plotting method (Def: Seaborn) ]
     -hor <+>  [ Add horizontal line(s), y = input (def: None) ]
     -col <+>  [ Vertical/Horizontal line color (def="red") ]
+    -alp < >  [ Transparency to the colored area (Def: 1.0) ]
     -img < >  [ Figure format: png|jpg|svg|eps|pdf (Def: png) ]
     -siz <+>  [ Figure x/y dimension in inch (Def: 8 6) ]
     -dpi < >  [ Figure quality (Def: 150) ]\n
@@ -55,6 +57,8 @@ def main():
     size  = np.array(args.size, dtype=np.float32)
   else:
     size  = args.size
+  if args.inner == 'none':
+    args.inner = None
 
 ###################################
 
@@ -87,7 +91,7 @@ def main():
 
     df_plot = ( p9.ggplot(lg_df,
       p9.aes( x=args.x_name ,y=args.y_name, fill=args.x_name )) +
-      p9.geom_violin(width=.75, draw_quantiles=Quant, show_legend=False) + 
+      p9.geom_violin(width=.75, draw_quantiles=Quant, show_legend=False, alpha=float(args.alpha)) + 
       p9.ggtitle(args.title) + p9.theme_classic() + set_ylim +
       p9.scale_x_discrete(limits=args.col_names) +
       p9.theme( text = p9.element_text(size=12, color='black'), 
@@ -111,8 +115,8 @@ def main():
     fig, ax = plt.subplots()
     fig.set_size_inches(tuple(size))
 
-    ax = sns.violinplot(x=args.x_name, y=args.y_name, data=lg_df,
-                        linewidth=float(args.linewidth), inner='box')
+    ax = sns.violinplot(x=args.x_name, y=args.y_name, data=lg_df, inner=args.inner,
+                        linewidth=float(args.linewidth), alpha=float(args.alpha))
 
     ## Add custom horizontal (only) lines
     if args.hlines:
@@ -156,6 +160,8 @@ def UserInput():
                   help='Rotate x-tick label by degree (Def: 0 | 33 is good)')
   p.add_argument('-l', dest='y_lim', required=False, nargs="+", default=None,
                   help='Set [bottom top] y-limits (Def: None)')
+  p.add_argument('-v', dest='inner', required=False, default='box',
+                  help='Representation of datapoint, box|quartile|none (Def: box)')
 
   p.add_argument('-w', dest='linewidth', required=False, default=1.0,
                   help='Line width (Def: 1.0)')
@@ -163,7 +169,8 @@ def UserInput():
                   help='Add horizontal line(s), y = input (Def: None)')
   p.add_argument('-col', dest='refcolr',required=False, default=['r'], nargs='+',
                   help='Vertical/Horizontal line color (def="red")')
-
+  p.add_argument('-alp', dest='alpha', required=False, default=1.0,
+                  help='Transparency to the colored area (Def: 1.0)')
   p.add_argument('-img', dest='img', required=False, default='png',
                   help='Figure format: png|jpg|svg|eps|pdf (Def: png)')
   p.add_argument('-siz', dest='size', required=False, nargs='+', default=[8,6],
@@ -171,7 +178,7 @@ def UserInput():
   p.add_argument('-dpi', dest='dpi', required=False, default=150,
                   help='Figure quality  (Def: 150)')
 
-  p.add_argument('-p', dest='use_p9', action='store_true',
+  p.add_argument('-p9', dest='use_p9', action='store_true',
                   help='Use Plotnine styling (Def: Seaborn)')
 
   args=p.parse_args()
